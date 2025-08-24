@@ -5,8 +5,9 @@ use crate::card::Card;
 pub struct ClientGameState {
     pub your_card: Option<Card>,
     pub opponent_card: Option<Card>,
-    pub center_card: Card,
+    pub center_card: Option<Card>,
     pub your_hand: Vec<Card>,
+    pub your_playable_cards: Vec<Card>,
     pub opponent_hand_size: usize,
     pub your_tricks: usize,
     pub opponent_tricks: usize,

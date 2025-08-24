@@ -3,7 +3,7 @@ use common::card::Card;
 use crate::display_constants::*;
 
 pub struct CardView {
-    pub(crate) card: Card,
+    pub card: Card,
     x: f32,
     y: f32,
     pub selected: bool,
@@ -12,8 +12,8 @@ pub struct CardView {
 }
 
 impl CardView {
-    pub fn new(card: Card, x: f32, y: f32, hoverable: bool) -> Self {
-        Self { card, x, y, selected: false, hoverable }
+    pub fn new(card: Card, x: f32, y: f32, hoverable: bool, playable: bool) -> Self {
+        Self { card, x, y, selected: false, hoverable, playable }
     }
 
     pub fn draw(&self) {
@@ -27,6 +27,8 @@ impl CardView {
 
         if self.hoverable && self.is_hovered() {
             draw_rectangle_lines(x, y, card_width(), card_height(), 2.0, GREEN);
+        } else if self.playable {
+            draw_rectangle_lines(x, y, card_width(), card_height(), 2.0, ORANGE);
         } else {
             draw_rectangle_lines(x, y, card_width(), card_height(), 2.0, BLACK);
         }

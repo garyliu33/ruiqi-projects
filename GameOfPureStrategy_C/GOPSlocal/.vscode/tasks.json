@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",               // Task name
+      "type": "shell",                // Shell command type
+      "command": "make",              // Run make (adjust for your compiler)
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"]      // Match problems to GCC
+    }
+  ]
+}

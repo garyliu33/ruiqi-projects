@@ -26,22 +26,21 @@ impl PlayedCardView {
             color = BLACK;
         }
         draw_rectangle_lines(
-            self.x - card_width() / 2.0 - played_card_padding(),
-            self.y - card_height() / 2.0 - played_card_padding(),
-            card_width() + 2.0 * played_card_padding(),
-            card_height() + 2.0 * played_card_padding(),
+            self.x - card_width() / 2.0 - empty_card_padding(),
+            self.y - card_height() / 2.0 - empty_card_padding(),
+            card_width() + 2.0 * empty_card_padding(),
+            card_height() + 2.0 * empty_card_padding(),
             3.0,
             color
         );
 
-        match self.card {
-            Some(card) => CardView::new(card, self.x, self.y, false).draw(),
-            None => ()
+        if let Some(card) = self.card {
+            CardView::new(card, self.x, self.y, false, false).draw()
         }
     }
 
     pub fn is_hovered(&self) -> bool {
         let (mx, my) = mouse_position();
-        self.hoverable && mx > self.x - card_width() / 2.0 - played_card_padding() && mx < self.x + card_width() / 2.0 + played_card_padding() && my > self.y - card_height() / 2.0 - played_card_padding() && my < self.y + card_height() / 2.0 + played_card_padding()
+        self.hoverable && mx > self.x - card_width() / 2.0 - empty_card_padding() && mx < self.x + card_width() / 2.0 + empty_card_padding() && my > self.y - card_height() / 2.0 - empty_card_padding() && my < self.y + card_height() / 2.0 + empty_card_padding()
     }
 }

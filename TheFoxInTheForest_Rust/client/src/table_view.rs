@@ -29,7 +29,7 @@ impl TableView {
             opponent_stat_view: PlayerStatView::new(state.opponent_points, state.opponent_tricks, 50.0, 50.0), // TODO change x and y
             center_view: CenterView::new(state.center_card, screen_width() / 2.0, screen_height() / 2.0),
             your_played_card_view: PlayedCardView::new(state.your_card, screen_width() / 2.0, 3.0 * screen_height() / 4.0, state.is_your_turn),
-            your_hand_view: HandView::new(&state.your_hand, screen_width() / 2.0, screen_height() - card_height() / 2.0, state.is_your_turn),
+            your_hand_view: HandView::new(&state.your_hand, &state.your_playable_cards, screen_width() / 2.0, screen_height() - card_height() / 2.0, state.is_your_turn),
             your_stat_view: PlayerStatView::new(state.your_points, state.your_tricks, 50.0, screen_height() - 50.0),
             is_your_turn: state.is_your_turn
         }

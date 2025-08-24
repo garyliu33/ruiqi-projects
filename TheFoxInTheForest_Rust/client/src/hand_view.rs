@@ -11,7 +11,7 @@ pub struct HandView {
 }
 
 impl HandView {
-    pub fn new(cards: &Vec<Card>, x: f32, y: f32, is_turn: bool) -> Self {
+    pub fn new(cards: &Vec<Card>, playable_cards: &Vec<Card>, x: f32, y: f32, is_turn: bool) -> Self {
         let mut views = Vec::new();
         let num_cards = cards.len();
         for (i, card) in cards.into_iter().enumerate() {
@@ -19,7 +19,8 @@ impl HandView {
                 *card,
                 x + (2 * i as i32 - num_cards as i32 + 1) as f32 * card_width() / 2.0,
                 y,
-                true
+                true,
+                is_turn && playable_cards.contains(card)
             ));
         }
         Self { cards: views, x, y, is_turn }

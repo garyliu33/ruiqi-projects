@@ -43,13 +43,11 @@ impl Rank {
 #[derive(Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Card {
     rank: Rank,
-    suit: Suit
+    suit: Suit,
 }
 
 impl Card {
-    pub fn new(rank: Rank, suit: Suit) -> Self {
-        Card { rank, suit }
-    }
+    pub fn new(rank: Rank, suit: Suit) -> Self { Card { rank, suit } }
 
     pub fn rank(&self) -> Rank {
         self.rank

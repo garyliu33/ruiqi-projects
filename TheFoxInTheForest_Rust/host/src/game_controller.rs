@@ -98,7 +98,7 @@ impl GameController {
         self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
         loop {
             let card = self.network.wait_for_move(player_index).card;
-            if self.can_play_card(card, player_index) {
+            if self.state.can_play_card(card, player_index) {
                 if self.state.players[player_index].remove_card(&card) {
                     self.play_card(card, player_index);
                 }
@@ -107,27 +107,6 @@ impl GameController {
                 self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
                 println!("Can't play that card");
             }
-        }
-    }
-
-    fn can_play_card(&self, card: Card, player_index: usize) -> bool {
-        let player = &self.state.players[player_index];
-        match self.state.leading_suit {
-            Some(suit) => {
-                let leading_card = self.state.trick_cards[0];
-                if leading_card.rank() == Rank::Eleven {
-                    match player.highest_card(suit) {
-                        Some(high_card) => card == *high_card || card.rank() == Rank::One,
-                        None => true,
-                    }
-                } else {
-                    match player.highest_card(suit) {
-                        Some(high_card) => card.suit() == high_card.suit(),
-                        None => true,
-                    }
-                }
-            }
-            None => true,
         }
     }
 
@@ -170,14 +149,14 @@ impl GameController {
             if leading_card.rank() == Rank::Nine {
                 leading_strength = self.card_strength(Card::new(
                     Rank::Nine,
-                    self.state.center_card.get_card().suit(),
+                    self.state.center_card.get_card().unwrap().suit()
                 ));
                 following_strength = self.card_strength(following_card);
             } else {
                 leading_strength = self.card_strength(leading_card);
                 following_strength = self.card_strength(Card::new(
                     Rank::Nine,
-                    self.state.center_card.get_card().suit(),
+                    self.state.center_card.get_card().unwrap().suit()
                 ));
             }
         }
@@ -213,7 +192,7 @@ impl GameController {
     fn card_strength(&mut self, card: Card) -> usize {
         match self.state.leading_suit {
             Some(lead) => {
-                if card.suit() == self.state.center_card.get_card().suit() {
+                if card.suit() == self.state.center_card.get_card().unwrap().suit() {
                     100 + card.rank().value()
                 } else if card.suit() == lead {
                     card.rank().value()
@@ -222,7 +201,7 @@ impl GameController {
                 }
             }
             None => {
-                if card.suit() == self.state.center_card.get_card().suit() {
+                if card.suit() == self.state.center_card.get_card().unwrap().suit() {
                     100 + card.rank().value()
                 } else {
                     card.rank().value()

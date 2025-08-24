@@ -1,4 +1,3 @@
-use macroquad::color::ORANGE;
 use macroquad::prelude::*;
 use crate::card_back_view::CardBackView;
 use crate::display_constants::*;

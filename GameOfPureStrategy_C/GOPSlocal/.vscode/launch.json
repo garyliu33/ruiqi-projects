@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug C Program",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/main",  // Correct executable path for Ubuntu
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,  // Use integrated terminal on Ubuntu
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",  // Path to GDB on Ubuntu
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for GDB",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "build"  // Ensure build task is run first
+    }
+  ]
+}

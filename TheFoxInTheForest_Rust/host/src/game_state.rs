@@ -1,4 +1,4 @@
-use common::card::{Card, Suit};
+use common::card::{Card, Rank, Suit};
 use common::center_card::CenterCard;
 use common::deck::Deck;
 use common::player::Player;
@@ -56,6 +56,13 @@ impl GameState {
         let center_card = self.center_card.get_card();
 
         let your_hand = self.players[player_id].get_hand();
+        let mut your_playable_cards = Vec::new();
+        for card in self.players[player_id].get_hand() {
+            if self.can_play_card(card, player_id) {
+                your_playable_cards.push(card);
+            }
+        }
+        
         let opponent_hand_size = self.players[1 - player_id].get_hand().len();
         let your_tricks = self.players[player_id].num_tricks_won();
         let opponent_tricks = self.players[1 - player_id].num_tricks_won();
@@ -67,12 +74,34 @@ impl GameState {
             opponent_card,
             center_card,
             your_hand,
+            your_playable_cards,
             opponent_hand_size,
             your_tricks,
             opponent_tricks,
             your_points,
             opponent_points,
             is_your_turn
+        }
+    }
+
+    pub fn can_play_card(&self, card: Card, player_index: usize) -> bool {
+        let player = &self.players[player_index];
+        match self.leading_suit {
+            Some(suit) => {
+                let leading_card = self.trick_cards[0];
+                if leading_card.rank() == Rank::Eleven {
+                    match player.highest_card(suit) {
+                        Some(high_card) => card == *high_card || card.rank() == Rank::One,
+                        None => true,
+                    }
+                } else {
+                    match player.highest_card(suit) {
+                        Some(high_card) => card.suit() == high_card.suit(),
+                        None => true,
+                    }
+                }
+            }
+            None => true,
         }
     }
 }

@@ -54,20 +54,6 @@ impl Network {
     }
 
     pub fn wait_for_move(&mut self, player_index: usize) -> ClientMove {
-        // let reader = &mut self.player_streams[player_index].reader;
-        // 
-        // loop {
-        //     let mut line = String::new();
-        //     match reader.read_line(&mut line) {
-        //         Ok(0) => panic!("Client disconnected"),
-        //         Ok(_) => {
-        //             let client_move = serde_json::from_str(line.trim());
-        //             return client_move.unwrap();
-        //         }
-        //         Err(_) => panic!("Error while waiting for move")
-        //     }
-        // }
-
         let reader = &mut self.player_streams[player_index].reader;
         let mut line = String::new();
         reader.read_line(&mut line).expect("Failed to read line");

@@ -17,16 +17,16 @@ impl OpponentPlayedCardView {
     
     pub fn draw(&self) {
         draw_rectangle_lines(
-            self.x - card_width() / 2.0 - played_card_padding(),
-            self.y - card_height() / 2.0 - played_card_padding(),
-            card_width() + 2.0 * played_card_padding(),
-            card_height() + 2.0 * played_card_padding(),
+            self.x - card_width() / 2.0 - empty_card_padding(),
+            self.y - card_height() / 2.0 - empty_card_padding(),
+            card_width() + 2.0 * empty_card_padding(),
+            card_height() + 2.0 * empty_card_padding(),
             3.0,
             BLACK
         );
 
         if let Some(card) = self.card {
-            CardView::new(card, self.x, self.y, false).draw()
+            CardView::new(card, self.x, self.y, false, false).draw()
         }
     }
 }

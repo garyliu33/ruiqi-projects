@@ -15,8 +15,8 @@ impl CenterCard {
         card
     }
     
-    pub fn get_card(&self) -> Card {
-        self.card.unwrap()
+    pub fn get_card(&self) -> Option<Card> {
+        self.card
     }
 
     pub fn set_card(&mut self, card: Card) {
