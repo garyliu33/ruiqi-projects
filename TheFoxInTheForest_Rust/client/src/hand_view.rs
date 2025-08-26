@@ -61,7 +61,7 @@ impl HandView {
                 total_width + pop_offset() * 2.0,
                 total_height + pop_offset() * 2.0,
                 pop_offset() * 2.0,
-                Color::from_rgba(240, 221, 81, 255)
+                TURN_INDICATOR_COLOR
             )
         }
     }

@@ -1,4 +1,4 @@
-use common::card::{Card, Rank, Suit};
+use common::card::*;
 use common::center_card::CenterCard;
 use common::deck::Deck;
 use common::player::Player;

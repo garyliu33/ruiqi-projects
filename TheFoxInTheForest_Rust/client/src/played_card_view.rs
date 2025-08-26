@@ -1,7 +1,7 @@
 use macroquad::input::mouse_position;
 use common::card::Card;
 use crate::card_view::CardView;
-use crate::display_constants::{card_height, card_width, empty_card_padding};
+use crate::display_constants::*;
 use crate::empty_card_view::EmptyCardView;
 
 pub struct PlayedCardView {

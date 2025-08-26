@@ -1,5 +1,4 @@
-use std::io::{BufRead, BufReader, Write};
-use std::io::Result;
+use std::io::{BufRead, BufReader, Write, Result};
 use std::net::{TcpListener, TcpStream};
 use local_ip_address::local_ip;
 use common::client_move::ClientMove;

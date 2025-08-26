@@ -13,7 +13,6 @@ use std::io;
 use std::io::{BufRead, Write};
 use std::net::TcpStream;
 use common::client_game_state::ClientGameState;
-use common::client_move::ClientMove;
 use macroquad::prelude::*;
 use display_constants::*;
 use crate::card_back_view::load_card_back_texture;

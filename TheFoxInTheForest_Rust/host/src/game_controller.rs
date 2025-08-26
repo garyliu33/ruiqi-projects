@@ -1,4 +1,4 @@
-use common::card::{Card, Rank, Suit};
+use common::card::*;
 use common::deck::Deck;
 use crate::game_state::GameState;
 use common::player::Player;

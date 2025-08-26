@@ -1,13 +1,15 @@
-use macroquad::prelude::{screen_height, screen_width};
+use macroquad::prelude::{screen_height, screen_width, Color};
 
 pub const WINDOW_WIDTH: i32 = 1280;
 pub const WINDOW_HEIGHT: i32 = 720;
 
-pub const BASE_CARD_WIDTH: f32 = WINDOW_WIDTH as f32 / 24.0;
-pub const BASE_CARD_HEIGHT: f32 = WINDOW_HEIGHT as f32 / 10.0;
-pub const BASE_CENTER_VIEW_GAP: f32 = BASE_CARD_WIDTH / 2.5;
-pub const BASE_POP_OFFSET: f32 = BASE_CARD_HEIGHT / 5.0;
-pub const BASE_EMPTY_CARD_PADDING: f32 = 10.0;
+const BASE_CARD_WIDTH: f32 = WINDOW_WIDTH as f32 / 24.0;
+const BASE_CARD_HEIGHT: f32 = WINDOW_HEIGHT as f32 / 10.0;
+const BASE_CENTER_VIEW_GAP: f32 = BASE_CARD_WIDTH / 2.5;
+const BASE_POP_OFFSET: f32 = BASE_CARD_HEIGHT / 5.0;
+const BASE_EMPTY_CARD_PADDING: f32 = 10.0;
+
+pub const TURN_INDICATOR_COLOR: Color = Color::from_rgba(240, 221, 81, 120);
 
 pub fn scale() -> f32 {
     let scale_x = screen_width() / WINDOW_WIDTH as f32;

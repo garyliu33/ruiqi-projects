@@ -1,4 +1,4 @@
-use crate::card::{Card, Suit};
+use crate::card::*;
 
 pub struct CenterCard {
     card: Option<Card>
