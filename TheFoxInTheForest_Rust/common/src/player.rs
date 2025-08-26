@@ -33,12 +33,9 @@ impl Player {
         io::stdout().flush().unwrap();
     }
 
-    pub fn remove_card(&mut self, card: &Card) -> bool {
+    pub fn remove_card(&mut self, card: &Card) {
         if let Some(pos) = self.hand.iter().position(|x| x == card) {
             self.hand.remove(pos);
-            true
-        } else {
-            false
         }
     }
 
@@ -64,5 +61,9 @@ impl Player {
     
     pub fn get_hand(&self) -> Vec<Card> {
         self.hand.clone()
+    }
+    
+    pub fn reset_tricks(&mut self) {
+        self.tricks = 0;
     }
 }

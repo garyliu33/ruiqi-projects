@@ -19,7 +19,6 @@ impl HandView {
                 *card,
                 x + (2 * i as i32 - num_cards as i32 + 1) as f32 * card_width() / 2.0,
                 y,
-                true,
                 is_turn && playable_cards.contains(card)
             ));
         }
@@ -28,12 +27,13 @@ impl HandView {
 
     pub fn update(&mut self) {
         for i in 0..self.cards.len() {
-            if self.cards[i].is_hovered() {
+            if self.cards[i].is_hovered() && self.cards[i].is_playable() {
                 for j in 0..self.cards.len() {
                     if j == i {
-                        self.cards[j].selected = !self.cards[j].selected;
+                        let selected = self.cards[j].is_selected();
+                        self.cards[j].set_selected(!selected);
                     } else {
-                        self.cards[j].selected = false;
+                        self.cards[j].set_selected(false);
                     }
                 }
             }
@@ -69,7 +69,7 @@ impl HandView {
     pub fn get_selected_card(&self) -> Option<Card> {
         self.cards
             .iter()
-            .find(|c| c.selected)
+            .find(|c| c.is_selected())
             .map(|c| c.card.clone())
     }
 }

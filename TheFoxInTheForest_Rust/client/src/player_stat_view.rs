@@ -49,7 +49,5 @@ impl PlayerStatView {
 
             y += line_height + line_spacing;
         }
-
-        // hello
     }
 }

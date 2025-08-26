@@ -5,9 +5,9 @@ mod hand_view;
 mod card_view;
 mod card_back_view;
 mod opponent_hand_view;
-mod opponent_played_card_view;
 mod played_card_view;
 mod player_stat_view;
+mod empty_card_view;
 
 use std::io;
 use std::io::{BufRead, Write};

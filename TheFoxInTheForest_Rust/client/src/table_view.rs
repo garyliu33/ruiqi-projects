@@ -6,14 +6,13 @@ use crate::center_view::CenterView;
 use crate::display_constants::*;
 use crate::hand_view::HandView;
 use crate::opponent_hand_view::OpponentHandView;
-use crate::opponent_played_card_view::OpponentPlayedCardView;
 use crate::played_card_view::PlayedCardView;
 use crate::player_stat_view::PlayerStatView;
 
 pub struct TableView {
     opponent_hand_view: OpponentHandView,
     opponent_stat_view: PlayerStatView,
-    opponent_played_card_view: OpponentPlayedCardView,
+    opponent_played_card_view: PlayedCardView,
     center_view: CenterView,
     your_played_card_view: PlayedCardView,
     your_hand_view: HandView,
@@ -25,12 +24,12 @@ impl TableView {
     pub fn new(state: &ClientGameState) -> Self {
         Self {
             opponent_hand_view: OpponentHandView::new(state.opponent_hand_size, screen_width() / 2.0, card_height() / 2.0, !state.is_your_turn),
-            opponent_played_card_view: OpponentPlayedCardView::new(state.opponent_card, screen_width() / 2.0, screen_height() / 4.0),
-            opponent_stat_view: PlayerStatView::new(state.opponent_points, state.opponent_tricks, 50.0, 50.0), // TODO change x and y
+            opponent_played_card_view: PlayedCardView::new(state.opponent_card, screen_width() / 2.0, screen_height() / 4.0, false),
+            opponent_stat_view: PlayerStatView::new(state.opponent_points, state.opponent_tricks, 80.0, 50.0),
             center_view: CenterView::new(state.center_card, screen_width() / 2.0, screen_height() / 2.0),
             your_played_card_view: PlayedCardView::new(state.your_card, screen_width() / 2.0, 3.0 * screen_height() / 4.0, state.is_your_turn),
             your_hand_view: HandView::new(&state.your_hand, &state.your_playable_cards, screen_width() / 2.0, screen_height() - card_height() / 2.0, state.is_your_turn),
-            your_stat_view: PlayerStatView::new(state.your_points, state.your_tricks, 50.0, screen_height() - 50.0),
+            your_stat_view: PlayerStatView::new(state.your_points, state.your_tricks, 80.0, screen_height() - 50.0),
             is_your_turn: state.is_your_turn
         }
     }

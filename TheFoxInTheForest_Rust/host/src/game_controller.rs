@@ -90,28 +90,25 @@ impl GameController {
 
     fn reset_game(&mut self) {
         self.state.deck = Deck::new();
+        self.state.players[0].reset_tricks();
+        self.state.players[1].reset_tricks();
         self.state.initial_starting_player = 1 - self.state.initial_starting_player;
         self.state.starting_player = self.state.initial_starting_player;
     }
 
     fn take_turn(&mut self, player_index: usize) {
-        self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
         loop {
+            self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
             let card = self.network.wait_for_move(player_index).card;
             if self.state.can_play_card(card, player_index) {
-                if self.state.players[player_index].remove_card(&card) {
-                    self.play_card(card, player_index);
-                }
+                self.state.players[player_index].remove_card(&card);
+                self.play_card(card, player_index);
                 break;
-            } else {
-                self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
-                println!("Can't play that card");
             }
         }
     }
 
     fn play_card(&mut self, card: Card, player_index: usize) {
-        let player = &mut self.state.players[player_index];
         if self.state.trick_cards.is_empty() {
             self.state.leading_suit = Some(card.suit());
         }
@@ -119,15 +116,17 @@ impl GameController {
 
         match card.rank() {
             Rank::Three => {
-                player.draw_card(self.state.center_card.remove_card());
+                self.state.players[player_index].draw_card(self.state.center_card.remove_card());
                 self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
                 let card = self.network.wait_for_move(player_index).card;
+                self.state.players[player_index].remove_card(&card);
                 self.state.center_card.set_card(card);
             }
             Rank::Five => {
-                player.draw_card(self.state.deck.pop());
+                self.state.players[player_index].draw_card(self.state.deck.pop());
                 self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
                 let card = self.network.wait_for_move(player_index).card;
+                self.state.players[player_index].remove_card(&card);
                 self.state.deck.add_to_bottom(card);
             }
             _ => (),

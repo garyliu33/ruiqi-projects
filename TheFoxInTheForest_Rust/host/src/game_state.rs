@@ -23,7 +23,7 @@ impl GameState {
             center_card: CenterCard::new(),
             players,
             starting_player: initial_starting_player,
-            initial_starting_player,
+            initial_starting_player
         }
     }
 
@@ -85,23 +85,33 @@ impl GameState {
     }
 
     pub fn can_play_card(&self, card: Card, player_index: usize) -> bool {
-        let player = &self.players[player_index];
-        match self.leading_suit {
-            Some(suit) => {
-                let leading_card = self.trick_cards[0];
-                if leading_card.rank() == Rank::Eleven {
-                    match player.highest_card(suit) {
-                        Some(high_card) => card == *high_card || card.rank() == Rank::One,
-                        None => true,
-                    }
+        match self.trick_cards.len() {
+            0 => player_index == self.starting_player,
+            1 => {
+                if player_index == self.starting_player {
+                    true
                 } else {
-                    match player.highest_card(suit) {
-                        Some(high_card) => card.suit() == high_card.suit(),
-                        None => true,
+                    let player = &self.players[player_index];
+                    if let Some(suit) = self.leading_suit {
+                        let leading_card = self.trick_cards[0];
+                        if leading_card.rank() == Rank::Eleven {
+                            match player.highest_card(suit) {
+                                Some(high_card) => card == *high_card || (card.rank() == Rank::One && card.suit() == suit),
+                                None => true,
+                            }
+                        } else {
+                            match player.highest_card(suit) {
+                                Some(high_card) => card.suit() == high_card.suit(),
+                                None => true,
+                            }
+                        }
+                    } else {
+                        unreachable!()
                     }
                 }
             }
-            None => true,
+            2 => player_index != self.starting_player,
+            _ => unreachable!()
         }
     }
 }
