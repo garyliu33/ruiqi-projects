@@ -1,1 +1,0 @@
-public record ClientMove(Card card, int wallIndex) {}
