@@ -136,11 +136,8 @@ impl GameController {
             } else {
                 println!("Player {} disconnected. Pausing game until they reconnect.", player_index);
 
-                // This inner loop will block progress until the player's slot is filled again.
                 while self.network.player_streams[player_index].is_none() {
-                    // Keep checking for new connections.
                     self.network.accept_new_players();
-                    // Pause briefly to avoid needlessly spinning the CPU.
                     std::thread::sleep(std::time::Duration::from_millis(500));
                 }
 
