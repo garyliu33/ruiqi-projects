@@ -1,6 +1,6 @@
 use std::io;
 use std::io::Write;
-use crate::card::{Card, Suit};
+use crate::card::*;
 
 pub struct Player {
     hand: Vec<Card>,

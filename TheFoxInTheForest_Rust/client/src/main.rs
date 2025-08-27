@@ -13,7 +13,7 @@ mod message_view;
 use std::io;
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
-use common::server_message::{ClientGameState, ServerMessage};
+use common::server_message::ServerMessage;
 use macroquad::prelude::*;
 use display_constants::*;
 use crate::card_back_view::load_card_back_texture;
