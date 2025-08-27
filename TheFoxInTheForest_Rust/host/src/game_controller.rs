@@ -30,11 +30,7 @@ impl GameController {
             self.run_game();
             self.add_points();
             if self.is_game_over() {
-                match self.get_winner() {
-                    0 => println!("Player 0 wins"),
-                    1 => println!("Player 1 wins"),
-                    _ => println!("It's a tie")
-                }
+                // TODO
                 break;
             }
             self.reset_game();
@@ -98,8 +94,8 @@ impl GameController {
 
     fn take_turn(&mut self, player_index: usize) {
         loop {
-            self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
-            let card = self.network.wait_for_move(player_index).card;
+            self.network.send_game_state(&self.state, player_index);
+            let card = self.wait_for_move(player_index);
             if self.state.can_play_card(card, player_index) {
                 self.state.players[player_index].remove_card(&card);
                 self.play_card(card, player_index);
@@ -117,19 +113,40 @@ impl GameController {
         match card.rank() {
             Rank::Three => {
                 self.state.players[player_index].draw_card(self.state.center_card.remove_card());
-                self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
-                let card = self.network.wait_for_move(player_index).card;
+                self.network.send_game_state(&self.state, player_index);
+                let card = self.wait_for_move(player_index);
                 self.state.players[player_index].remove_card(&card);
                 self.state.center_card.set_card(card);
             }
             Rank::Five => {
                 self.state.players[player_index].draw_card(self.state.deck.pop());
-                self.network.send_game_state(&self.state, player_index).expect("Failed to send game state");
-                let card = self.network.wait_for_move(player_index).card;
+                self.network.send_game_state(&self.state, player_index);
+                let card = self.wait_for_move(player_index);
                 self.state.players[player_index].remove_card(&card);
                 self.state.deck.add_to_bottom(card);
             }
             _ => (),
+        }
+    }
+
+    fn wait_for_move(&mut self, player_index: usize) -> Card {
+        loop {
+            if let Some(client_move) = self.network.wait_for_move(player_index) {
+                return client_move.card;
+            } else {
+                println!("Player {} disconnected. Pausing game until they reconnect.", player_index);
+
+                // This inner loop will block progress until the player's slot is filled again.
+                while self.network.player_streams[player_index].is_none() {
+                    // Keep checking for new connections.
+                    self.network.accept_new_players();
+                    // Pause briefly to avoid needlessly spinning the CPU.
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+                }
+
+                println!("Player {} reconnected! Resuming game.", player_index);
+                self.network.send_game_state(&self.state, player_index);
+            }
         }
     }
 
