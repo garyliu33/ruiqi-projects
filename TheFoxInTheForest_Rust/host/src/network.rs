@@ -2,6 +2,7 @@ use std::io::{BufRead, BufReader, Write, Result, ErrorKind};
 use std::net::{TcpListener, TcpStream};
 use local_ip_address::local_ip;
 use common::client_move::ClientMove;
+use common::server_message::{ClientGameState, ServerMessage};
 use crate::game_state::GameState;
 
 pub struct PlayerStream {
@@ -76,7 +77,37 @@ impl Network {
         for i in 0..self.player_streams.len() {
             if let Some(player_stream) = &mut self.player_streams[i] {
                 let client_state = game_state.create_client_game_state(i, turn == i);
-                let json = match serde_json::to_string(&client_state) {
+                let json = match serde_json::to_string(&ServerMessage::GameState(client_state)) {
+                    Ok(j) => j,
+                    Err(e) => {
+                        eprintln!("Error serializing game state: {}", e);
+                        continue;
+                    }
+                };
+
+                // If writing to the stream fails, it means the client has disconnected.
+                if writeln!(player_stream.stream, "{}", json).is_err() {
+                    println!("Player {} disconnected (write error).", i);
+                    // Set their slot back to `None` so a new player can join.
+                    self.player_streams[i] = None;
+                }
+            }
+        }
+    }
+    
+    pub fn send_win_message(&mut self, state: &GameState, winner: usize) {
+        for i in 0..self.player_streams.len() {
+            let mut msg = String::new();
+            if i == winner {
+                msg.push_str("You win!");
+            } else if i == 1 - winner {
+                msg.push_str("You lose.");
+            } else {
+                msg.push_str("It's a tie.")
+            }
+            
+            if let Some(player_stream) = &mut self.player_streams[i] {
+                let json = match serde_json::to_string(&ServerMessage::GameOver(state.create_client_game_state(i, false), msg)) {
                     Ok(j) => j,
                     Err(e) => {
                         eprintln!("Error serializing game state: {}", e);

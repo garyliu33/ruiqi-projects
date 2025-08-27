@@ -8,11 +8,12 @@ mod opponent_hand_view;
 mod played_card_view;
 mod player_stat_view;
 mod empty_card_view;
+mod message_view;
 
 use std::io;
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
-use common::client_game_state::ClientGameState;
+use common::server_message::{ClientGameState, ServerMessage};
 use macroquad::prelude::*;
 use display_constants::*;
 use crate::card_back_view::load_card_back_texture;
@@ -41,6 +42,10 @@ enum AppState {
         reader: BufReader<TcpStream>,
         table: Option<TableView>,
     },
+    GameOver {
+        table: TableView,
+        msg: String
+    }
 }
 
 #[macroquad::main(window_conf)]
@@ -111,7 +116,7 @@ async fn main() {
                 match TcpStream::connect(format!("{}:4000", ip.trim())) {
                     Ok(stream) => {
                         stream.set_nonblocking(true).expect("Failed to set stream to non-blocking");
-                        let reader = io::BufReader::new(stream.try_clone().unwrap());
+                        let reader = BufReader::new(stream.try_clone().unwrap());
                         state = AppState::InGame { stream, reader, table: None };
                     }
                     Err(e) => {
@@ -135,8 +140,14 @@ async fn main() {
                     }
                     Ok(_) => {
                         if !buffer.trim().is_empty() {
-                            let game_state: ClientGameState = serde_json::from_str(&buffer).unwrap();
-                            *table = Some(TableView::new(&game_state));
+                            let server_message: ServerMessage = serde_json::from_str(&buffer).unwrap();
+                            match server_message {
+                                ServerMessage::GameState(game_state) => *table = Some(TableView::new(&game_state)),
+                                ServerMessage::GameOver(game_state, msg) => {
+                                    state = AppState::GameOver {table: TableView::new(&game_state), msg};
+                                    continue;
+                                }
+                            }
                         }
                     }
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => (),
@@ -163,6 +174,9 @@ async fn main() {
                         }
                     }
                 }
+            }
+            AppState::GameOver { table, msg } => {
+                table.draw_with_message(msg.clone());
             }
         }
 

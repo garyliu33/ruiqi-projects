@@ -30,7 +30,7 @@ impl GameController {
             self.run_game();
             self.add_points();
             if self.is_game_over() {
-                // TODO
+                self.network.send_win_message(&self.state, self.get_winner());
                 break;
             }
             self.reset_game();

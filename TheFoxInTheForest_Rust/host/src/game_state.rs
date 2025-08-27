@@ -2,7 +2,7 @@ use common::card::*;
 use common::center_card::CenterCard;
 use common::deck::Deck;
 use common::player::Player;
-use common::client_game_state::{ClientGameState};
+use common::server_message::{ClientGameState};
 
 pub struct GameState {
     pub leading_suit: Option<Suit>,

@@ -2,6 +2,12 @@ use serde::{Deserialize, Serialize};
 use crate::card::Card;
 
 #[derive(Serialize, Deserialize, Clone)]
+pub enum ServerMessage {
+    GameState(ClientGameState),
+    GameOver(ClientGameState, String)
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ClientGameState {
     pub your_card: Option<Card>,
     pub opponent_card: Option<Card>,
