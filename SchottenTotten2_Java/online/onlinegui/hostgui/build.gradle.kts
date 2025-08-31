@@ -2,8 +2,8 @@ plugins {
     id("java")
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+group = "com.st"
+version = "1.0"
 
 repositories {
     mavenCentral()
@@ -21,7 +21,7 @@ tasks.test {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "HostGUI" // Replace with your actual class
+        attributes["Main-Class"] = "com/st/host/HostGUI" // Replace with your actual class
     }
 
     // Optional: include dependencies (fat jar)
