@@ -1,0 +1,1 @@
+/home/whale/Desktop/projects/TiaoQi_Rust/TiaoQiLocal/target/debug/TiaoQiLocal: /home/whale/Desktop/projects/TiaoQi_Rust/TiaoQiLocal/src/board.rs /home/whale/Desktop/projects/TiaoQi_Rust/TiaoQiLocal/src/game_controller.rs /home/whale/Desktop/projects/TiaoQi_Rust/TiaoQiLocal/src/main.rs
