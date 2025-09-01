@@ -1,4 +1,4 @@
-use macroquad::prelude::{screen_height, screen_width, Color};
+use macroquad::prelude::*;
 
 pub const WINDOW_WIDTH: i32 = 1280;
 pub const WINDOW_HEIGHT: i32 = 720;

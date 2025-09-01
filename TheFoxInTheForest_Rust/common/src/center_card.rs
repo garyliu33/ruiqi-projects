@@ -1,4 +1,4 @@
-use crate::card::*;
+use crate::card::Card;
 
 pub struct CenterCard {
     card: Option<Card>
