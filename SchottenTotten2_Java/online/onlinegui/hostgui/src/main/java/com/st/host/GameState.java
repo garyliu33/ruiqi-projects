@@ -102,7 +102,7 @@ public class GameState {
         }
         builder.setIsClientTurn(isClientTurn);
         builder.setCauldronCount(cauldronCount);
-        builder.setUseCauldron(usedCauldron);
+        builder.setUsedCauldron(usedCauldron);
         builder.setIsClientAttacker(isClientAttacker);
         builder.setWinner(winner.toProto());
         if (lastPlayedCard != null) {

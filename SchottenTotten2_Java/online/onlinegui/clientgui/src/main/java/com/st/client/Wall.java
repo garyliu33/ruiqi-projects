@@ -34,11 +34,11 @@ public class Wall {
         }
     }
 
-    public Wall(int wallIndex, int intactLength, WallPattern intactPattern, Status status) {
+    public Wall(int wallIndex, int length, WallPattern pattern, Status status) {
         this.wallIndex = wallIndex;
         this.status = status;
-        this.length = intactLength;
-        this.pattern = intactPattern;
+        this.length = length;
+        this.pattern = pattern;
 
         this.attackerCards = new ArrayList<>();
         this.defenderCards = new ArrayList<>();
@@ -69,8 +69,8 @@ public class Wall {
     }
 
     public static Wall fromProto(WallProto proto) {
-        Wall wall = new Wall(proto.getWallIndex(), proto.getIntactLength(),
-                WallPattern.fromProto(proto.getIntactPattern()),
+        Wall wall = new Wall(proto.getWallIndex(), proto.getLength(),
+                WallPattern.fromProto(proto.getPattern()),
                 Status.fromProto(proto.getStatus()));
         for (int i = 0; i < proto.getAttackerCardsCount(); i++) {
             wall.attackerCards.add(Card.fromProto(proto.getAttackerCards(i)));

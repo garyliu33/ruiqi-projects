@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import com.st.proto.GameState.CardListProto;
 import com.st.proto.GameState.GameStateProto;
 
@@ -87,11 +88,17 @@ public class GameState {
         for (int i = 0; i < proto.getHostHandCount(); i++) {
             hostHand.add(Card.fromProto(proto.getHostHand(i)));
         }
+
         Set<Card> clientHand = new TreeSet<>();
         for (int i = 0; i < proto.getClientHandCount(); i++) {
             clientHand.add(Card.fromProto(proto.getClientHand(i)));
         }
+
         Wall[] walls = new Wall[proto.getWallsCount()];
+        for (int i = 0; i < walls.length; i++) {
+            walls[i] = Wall.fromProto(proto.getWalls(i));
+        }
+
         Map<CardColor, List<Card>> discard = new TreeMap<>();
         Map<Integer, CardListProto> protoMap = proto.getDiscardMap();
         for (Integer key : protoMap.keySet()) {
@@ -102,12 +109,10 @@ public class GameState {
             }
             discard.put(CardColor.values()[key], cards);
         }
-        for (int i = 0; i < walls.length; i++) {
-            walls[i] = Wall.fromProto(proto.getWalls(i));
-        }
+
         return new GameState(hostHand, clientHand, walls, proto.getDeckSize(), discard,
-                proto.getIsClientTurn(), proto.getCauldronCount(), proto.getUseCauldron(),
+                proto.getIsClientTurn(), proto.getCauldronCount(), proto.getUsedCauldron(),
                 proto.getIsClientAttacker(), Winner.fromProto(proto.getWinner()),
-                Card.fromProto(proto.getLastPlayedCard()));
+                proto.hasLastPlayedCard() ? Card.fromProto(proto.getLastPlayedCard()) : null);
     }
 }

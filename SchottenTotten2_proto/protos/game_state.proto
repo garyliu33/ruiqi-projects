@@ -24,7 +24,7 @@ message GameStateProto {
     map<int32, CardListProto> discard = 5;
     bool is_client_turn = 6;
     int32 cauldron_count = 7;
-    bool use_cauldron = 8;
+    bool used_cauldron = 8;
     bool is_client_attacker = 9;
     WinnerProto winner = 10;
     CardProto last_played_card = 11;
