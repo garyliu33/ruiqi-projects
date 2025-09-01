@@ -1,18 +1,24 @@
 package com.st.client;
 
-import com.google.gson.Gson;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Objects;
 
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+
+import com.st.proto.GameState.GameStateProto;
+
 public class ClientGUI {
     private static Socket socket;
-    private static final Gson gson = new Gson();
     private static JFrame mainFrame;
     private static GameState gameState;
     private static GameView gameView;
@@ -24,7 +30,8 @@ public class ClientGUI {
         mainFrame.setVisible(true);
 
         while (true) {
-            String hostIP = JOptionPane.showInputDialog(mainFrame, "Enter host IP: ", "Host IP", JOptionPane.QUESTION_MESSAGE);
+            String hostIP = JOptionPane.showInputDialog(mainFrame, "Enter host IP: ", "Host IP",
+                    JOptionPane.QUESTION_MESSAGE);
             if (hostIP == null) {
                 return;
             }
@@ -33,7 +40,9 @@ public class ClientGUI {
                 break;
             } catch (IOException e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(mainFrame, "Unable to connect to the server. Please check the IP and try again.", "Connection Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(mainFrame,
+                        "Unable to connect to the server. Please check the IP and try again.",
+                        "Connection Error", JOptionPane.ERROR_MESSAGE);
             }
         }
 
@@ -56,23 +65,22 @@ public class ClientGUI {
         listenForGameState();
     }
 
+    private static GameState getGameState(InputStream in) throws IOException {
+        return GameState.fromProto(GameStateProto.parseDelimitedFrom(in));
+    }
+
     private static void listenForGameState() {
         new Thread(() -> {
-            try (InputStream input = socket.getInputStream();
-                 BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-            ) {
-                String json;
-                while ((json = reader.readLine()) != null) {
-                    System.out.println("receiving gamestate:" + System.currentTimeMillis());
-                    gameState = gson.fromJson(json, GameState.class);
+            try (InputStream input = socket.getInputStream()) {
+                while ((gameState = getGameState(input)) != null) {
                     gameView = new GameView(gameState, ClientGUI::onWallClicked);
                     updateUI();
 
                     if (gameState.getWinner() != Winner.NONE) {
-                        SwingUtilities.invokeLater(() ->
-                                JOptionPane.showMessageDialog(mainFrame,
-                                        gameState.getWinner() == Winner.ATTACKER ? "Attacker wins!" : "Defender wins!",
-                                        "Game Over", JOptionPane.INFORMATION_MESSAGE));
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mainFrame,
+                                gameState.getWinner() == Winner.ATTACKER ? "Attacker wins!"
+                                        : "Defender wins!",
+                                "Game Over", JOptionPane.INFORMATION_MESSAGE));
                     }
                 }
             } catch (IOException e) {
@@ -83,7 +91,8 @@ public class ClientGUI {
 
     public static void updateUI() {
         mainFrame.getContentPane().removeAll();
-        mainFrame.add(Objects.requireNonNullElseGet(gameView, () -> new JLabel("Host is choosing role...")));
+        mainFrame.add(Objects.requireNonNullElseGet(gameView,
+                () -> new JLabel("Host is choosing role...")));
         mainFrame.revalidate();
         mainFrame.repaint();
     }
@@ -95,10 +104,8 @@ public class ClientGUI {
                 ClientMove move = new ClientMove(card, wall.getWallIndex());
                 gameView.unselectCard();
                 try {
-                    PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                    String jsonMove = gson.toJson(move);
-                    System.out.println("before sending json: " + System.currentTimeMillis());
-                    out.println(jsonMove);
+                    OutputStream out = socket.getOutputStream();
+                    move.toProto().writeDelimitedTo(out);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

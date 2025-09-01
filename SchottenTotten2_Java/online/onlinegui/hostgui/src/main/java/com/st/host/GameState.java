@@ -1,6 +1,11 @@
 package com.st.host;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.st.proto.GameState.CardListProto;
+import com.st.proto.GameState.GameStateProto;
 
 public class GameState {
     private final Set<Card> hostHand;
@@ -15,7 +20,9 @@ public class GameState {
     private final Winner winner;
     private final Card lastPlayedCard;
 
-    public GameState(Set<Card> hostHand, Set<Card> clientHand, Wall[] walls, int deckSize, Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount, boolean usedCauldron, boolean isClientAttacker, Winner winner, Card lastPlayedCard) {
+    public GameState(Set<Card> hostHand, Set<Card> clientHand, Wall[] walls, int deckSize,
+            Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount,
+            boolean usedCauldron, boolean isClientAttacker, Winner winner, Card lastPlayedCard) {
         this.hostHand = hostHand;
         this.clientHand = clientHand;
         this.walls = walls;
@@ -71,5 +78,36 @@ public class GameState {
 
     public Card getLastPlayedCard() {
         return lastPlayedCard;
+    }
+
+    public GameStateProto toProto() {
+        GameStateProto.Builder builder = GameStateProto.newBuilder();
+        for (Card c : hostHand) {
+            builder.addHostHand(c.toProto());
+        }
+        for (Card c : clientHand) {
+            builder.addClientHand(c.toProto());
+        }
+        for (Wall w : walls) {
+            builder.addWalls(w.toProto());
+        }
+        builder.setDeckSize(deckSize);
+        for (CardColor c : discard.keySet()) {
+            List<Card> cards = discard.get(c);
+            CardListProto.Builder cardListProtoBuilder = CardListProto.newBuilder();
+            for (Card card : cards) {
+                cardListProtoBuilder.addCardList(card.toProto());
+            }
+            builder.putDiscard(c.ordinal(), cardListProtoBuilder.build());
+        }
+        builder.setIsClientTurn(isClientTurn);
+        builder.setCauldronCount(cauldronCount);
+        builder.setUsedCauldron(usedCauldron);
+        builder.setIsClientAttacker(isClientAttacker);
+        builder.setWinner(winner.toProto());
+        if (lastPlayedCard != null) {
+            builder.setLastPlayedCard(lastPlayedCard.toProto());
+        }
+        return builder.build();
     }
 }
