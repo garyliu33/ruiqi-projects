@@ -2,6 +2,8 @@ package com.st.client;
 
 import java.util.Objects;
 
+import com.st.proto.Card.CardProto;
+
 public class Card implements Comparable<Card> {
     private final int value;
     private final CardColor cardColor;
@@ -41,5 +43,14 @@ public class Card implements Comparable<Card> {
 
     public int hashCode() {
         return Objects.hash(value, cardColor);
+    }
+
+    public CardProto toProto() {
+        CardProto.Builder builder = CardProto.newBuilder();
+        return builder.setColor(cardColor.toProto()).setValue(value).build();
+    }
+
+    public static Card fromProto(CardProto proto) {
+        return new Card(CardColor.fromProto(proto.getColor()), proto.getValue());
     }
 }

@@ -3,6 +3,8 @@ package com.st.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.st.proto.Wall.WallProto;
+
 public class Wall {
     private final int wallIndex;
     private final Status status;
@@ -48,5 +50,10 @@ public class Wall {
 
     public int getWallIndex() {
         return wallIndex;
+    }
+
+    public static Wall fromProto(WallProto proto) {
+        return new Wall(proto.getWallIndex(), proto.getIntactLength(),
+                WallPattern.fromProto(proto.getIntactPattern()));
     }
 }

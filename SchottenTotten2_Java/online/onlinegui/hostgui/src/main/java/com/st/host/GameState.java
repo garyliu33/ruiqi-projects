@@ -82,19 +82,20 @@ public class GameState {
 
     public GameStateProto toProto() {
         GameStateProto.Builder builder = GameStateProto.newBuilder();
-        for (Card c: hostHand) {
+        for (Card c : hostHand) {
             builder.addHostHand(c.toProto());
         }
-        for (Card c: clientHand) {
+        for (Card c : clientHand) {
             builder.addClientHand(c.toProto());
         }
-        for (Wall w: walls) {
+        for (Wall w : walls) {
             builder.addWalls(w.toProto());
         }
-        for (CardColor c: discard.keySet()) {
+        builder.setDeckSize(deckSize);
+        for (CardColor c : discard.keySet()) {
             List<Card> cards = discard.get(c);
             CardListProto.Builder cardListProtoBuilder = CardListProto.newBuilder();
-            for (Card card: cards) {
+            for (Card card : cards) {
                 cardListProtoBuilder.addCardList(card.toProto());
             }
             builder.putDiscard(c.ordinal(), cardListProtoBuilder.build());
@@ -104,7 +105,9 @@ public class GameState {
         builder.setUseCauldron(usedCauldron);
         builder.setIsClientAttacker(isClientAttacker);
         builder.setWinner(winner.toProto());
-        builder.setLastPlayedCard(lastPlayedCard.toProto());
+        if (lastPlayedCard != null) {
+            builder.setLastPlayedCard(lastPlayedCard.toProto());
+        }
         return builder.build();
     }
 }

@@ -1,8 +1,13 @@
 package com.st.client;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import com.st.proto.GameState.CardListProto;
+import com.st.proto.GameState.GameStateProto;
 
 public class GameState {
     private final Set<Card> hostHand;
@@ -17,7 +22,9 @@ public class GameState {
     private final Winner winner;
     private final Card lastPlayedCard;
 
-    public GameState(Set<Card> hostHand, Set<Card> clientHand, Wall[] walls, int deckSize, Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount, boolean usedCauldron, boolean isClientAttacker, Winner winner, Card lastPlayedCard) {
+    public GameState(Set<Card> hostHand, Set<Card> clientHand, Wall[] walls, int deckSize,
+            Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount,
+            boolean usedCauldron, boolean isClientAttacker, Winner winner, Card lastPlayedCard) {
         this.hostHand = hostHand;
         this.clientHand = clientHand;
         this.walls = walls;
@@ -73,5 +80,34 @@ public class GameState {
 
     public Card getLastPlayedCard() {
         return lastPlayedCard;
+    }
+
+    public static GameState fromProto(GameStateProto proto) {
+        Set<Card> hostHand = new TreeSet<>();
+        for (int i = 0; i < proto.getHostHandCount(); i++) {
+            hostHand.add(Card.fromProto(proto.getHostHand(i)));
+        }
+        Set<Card> clientHand = new TreeSet<>();
+        for (int i = 0; i < proto.getClientHandCount(); i++) {
+            clientHand.add(Card.fromProto(proto.getClientHand(i)));
+        }
+        Wall[] walls = new Wall[proto.getWallsCount()];
+        Map<CardColor, List<Card>> discard = new TreeMap<>();
+        Map<Integer, CardListProto> protoMap = proto.getDiscardMap();
+        for (Integer key : protoMap.keySet()) {
+            List<Card> cards = new ArrayList<>();
+            CardListProto cardListProto = protoMap.get(key);
+            for (int i = 0; i < cardListProto.getCardListCount(); i++) {
+                cards.add(Card.fromProto(cardListProto.getCardList(i)));
+            }
+            discard.put(CardColor.values()[key], cards);
+        }
+        for (int i = 0; i < walls.length; i++) {
+            walls[i] = Wall.fromProto(proto.getWalls(i));
+        }
+        return new GameState(hostHand, clientHand, walls, proto.getDeckSize(), discard,
+                proto.getIsClientTurn(), proto.getCauldronCount(), proto.getUseCauldron(),
+                proto.getIsClientAttacker(), Winner.fromProto(proto.getWinner()),
+                Card.fromProto(proto.getLastPlayedCard()));
     }
 }

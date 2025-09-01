@@ -19,7 +19,7 @@ message GameStateProto {
     repeated CardProto host_hand = 1;
     repeated CardProto client_hand = 2;
     repeated WallProto walls = 3;
-    repeated int32 deck_size = 4;
+    optional int32 deck_size = 4;
     // ColorProto to card list mapping.
     map<int32, CardListProto> discard = 5;
     bool is_client_turn = 6;
