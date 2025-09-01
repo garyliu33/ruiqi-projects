@@ -1,14 +1,15 @@
 package com.st.host;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.function.Consumer;
 
-import com.google.protobuf.Message;
-import com.google.protobuf.MessageLite;
+import com.st.common.ClientMove;
+import com.st.common.GameState;
 import com.st.proto.ClientMove.ClientMoveProto;
-import com.st.proto.GameState.GameStateProto;
 
 public class Network {
     private OutputStream out;

@@ -11,6 +11,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":common"))
     implementation("com.google.protobuf:protobuf-java:4.32.0")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")

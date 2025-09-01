@@ -15,6 +15,12 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import com.st.common.Card;
+import com.st.common.ClientMove;
+import com.st.common.Constants;
+import com.st.common.GameState;
+import com.st.common.Wall;
+import com.st.common.Winner;
 import com.st.proto.GameState.GameStateProto;
 
 public class ClientGUI {

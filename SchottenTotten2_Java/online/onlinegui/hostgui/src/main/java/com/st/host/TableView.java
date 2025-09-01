@@ -1,8 +1,13 @@
 package com.st.host;
 
 import javax.swing.*;
+
 import java.util.*;
 import java.util.function.Consumer;
+
+import com.st.common.Card;
+import com.st.common.CardColor;
+import com.st.common.Wall;
 
 public class TableView extends JPanel {
 

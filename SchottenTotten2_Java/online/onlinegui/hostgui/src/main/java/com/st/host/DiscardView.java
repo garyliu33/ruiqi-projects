@@ -1,9 +1,15 @@
 package com.st.host;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.JPanel;
+
+import com.st.common.Card;
+import com.st.common.CardColor;
+import com.st.common.Constants;
 
 public class DiscardView extends JPanel {
     public DiscardView(Map<CardColor, List<Card>> cardsByColor, Card lastPlayedCard) {

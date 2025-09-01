@@ -1,8 +1,14 @@
 package com.st.client;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.util.function.Consumer;
+
+import javax.swing.JPanel;
+
+import com.st.common.Card;
+import com.st.common.Constants;
+import com.st.common.Wall;
 
 public class BoardView extends JPanel {
     public BoardView(Wall[] walls, Consumer<Wall> onWallClicked, boolean isHostAttacker, Card lastPlayedCard) {

@@ -1,9 +1,15 @@
 package com.st.client;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.JPanel;
+
+import com.st.common.Card;
+import com.st.common.CardColor;
+import com.st.common.Constants;
 
 public class DiscardView extends JPanel {
     public DiscardView(Map<CardColor, List<Card>> cardsByColor, Card lastPlayedCard) {
@@ -16,7 +22,7 @@ public class DiscardView extends JPanel {
                 column.setPreferredSize(new Dimension(Constants.CARD_WIDTH, Constants.CARD_HEIGHT + (Constants.VALUES.size() - 1) * Constants.OVERLAP));
                 for (int i = cards.size() - 1; i >= 0; i--) {
                     Card card = cards.get(i);
-                    CardView cardView = new CardView(card, card.equals(lastPlayedCard));
+                    var cardView = new CardView(card, card.equals(lastPlayedCard));
                     cardView.setBounds(0, card.getValue() * Constants.OVERLAP, Constants.CARD_WIDTH, Constants.CARD_HEIGHT);
                     column.add(cardView);
                 }

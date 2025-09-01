@@ -1,5 +1,8 @@
 package com.st.host;
 
+import com.st.common.Card;
+import com.st.common.Constants;
+
 public class Player {
     protected Hand hand;
     protected boolean usedCauldron;

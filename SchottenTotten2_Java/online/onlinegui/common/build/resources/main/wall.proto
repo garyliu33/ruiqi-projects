@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package com.st.proto;
+
+import "card.proto";
+
+enum WallPatternProto {
+    COLOR = 0;
+    RUN = 1;
+    EQUALS = 2;
+    PLUS = 3;
+    MINUS = 4;
+    NONE_PATTERN = 5;
+}
+
+enum StatusProto {
+    BROKEN = 0; 
+    DAMAGED = 1;
+    INTACT = 2;
+}
+
+message WallProto {
+    optional int32 wall_index = 1;
+    optional StatusProto status = 2;
+    optional int32 length = 3;
+    optional int32 intact_length = 4;
+    optional int32 damaged_length = 5;
+    optional WallPatternProto pattern = 6;
+    optional WallPatternProto intact_pattern = 7;
+    optional WallPatternProto damaged_pattern = 8;
+    repeated CardProto attacker_cards = 9;
+    repeated CardProto defender_cards = 10;
+    optional bool attacker_finished_first = 11;
+}

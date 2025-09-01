@@ -1,11 +1,21 @@
 package com.st.client;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.function.Consumer;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+
+import com.st.common.Card;
+import com.st.common.Constants;
+import com.st.common.Wall;
 
 public class WallView extends JPanel {
     public WallView(Wall wall, Consumer<Wall> onWallClicked, boolean hostIsAttacker, Card lastPlayedCard) {

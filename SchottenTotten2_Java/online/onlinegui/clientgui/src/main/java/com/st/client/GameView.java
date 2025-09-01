@@ -1,7 +1,12 @@
 package com.st.client;
 
 import javax.swing.*;
+
 import java.util.function.Consumer;
+
+import com.st.common.Card;
+import com.st.common.GameState;
+import com.st.common.Wall;
 
 public class GameView extends JPanel {
     private HandView clientHandView;
