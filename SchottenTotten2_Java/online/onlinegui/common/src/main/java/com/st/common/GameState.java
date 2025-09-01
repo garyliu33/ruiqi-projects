@@ -83,10 +83,6 @@ public class GameState {
         return lastPlayedCard;
     }
 
-    public boolean getHasUsedCauldron() {
-        return usedCauldron;
-    }
-
     public GameStateProto toProto() {
         GameStateProto.Builder builder = GameStateProto.newBuilder();
         for (Card c : hostHand) {
