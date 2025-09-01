@@ -73,7 +73,6 @@ public class ClientGUI {
         new Thread(() -> {
             try (InputStream input = socket.getInputStream()) {
                 while ((gameState = getGameState(input)) != null) {
-                    System.out.println("receiving gamestate:" + System.currentTimeMillis());
                     gameView = new GameView(gameState, ClientGUI::onWallClicked);
                     updateUI();
 
@@ -106,7 +105,6 @@ public class ClientGUI {
                 gameView.unselectCard();
                 try {
                     OutputStream out = socket.getOutputStream();
-                    System.out.println("before sending json: " + System.currentTimeMillis());
                     move.toProto().writeDelimitedTo(out);
                 } catch (IOException e) {
                     e.printStackTrace();
