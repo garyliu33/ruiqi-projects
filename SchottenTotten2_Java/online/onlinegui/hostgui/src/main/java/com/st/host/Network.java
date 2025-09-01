@@ -4,22 +4,25 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.function.Consumer;
-import com.google.gson.Gson;
+
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
+import com.st.proto.ClientMove.ClientMoveProto;
+import com.st.proto.GameState.GameStateProto;
 
 public class Network {
-    private PrintWriter out;
-    private BufferedReader in;
+    private OutputStream out;
+    private InputStream in;
     private Thread listenerThread;
     private boolean listening;
-    private final Gson gson = new Gson();
     private Consumer<ClientMove> moveHandler;
     private GameState state;
     private final ServerSocket serverSocket;
 
     public Network(ServerSocket serverSocket) throws IOException {
         Socket clientSocket = serverSocket.accept();
-        out = new PrintWriter(clientSocket.getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        out = clientSocket.getOutputStream();
+        in = clientSocket.getInputStream();
         this.serverSocket = serverSocket;
         listenForClientMessages();
     }
@@ -41,10 +44,9 @@ public class Network {
         listening = true;
         listenerThread = new Thread(() -> {
             try {
-                String json;
-                while (listening && (json = in.readLine()) != null) {
-                    ClientMove move = gson.fromJson(json, ClientMove.class);
-                    if (move != null && moveHandler != null) {
+                ClientMove move = null;
+                while (listening && (move = readClientMove()) != null) {
+                    if (moveHandler != null) {
                         moveHandler.accept(move);
                     }
                 }
@@ -62,12 +64,18 @@ public class Network {
 
     public void sendGameState(GameState state) {
         this.state = state;
-        String json = gson.toJson(state);
-        out.println(json);
+        try {
+            state.toProto().writeDelimitedTo(out);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public ClientMove readClientMove() throws IOException {
+        return ClientMove.fromProto(ClientMoveProto.parseDelimitedFrom(in));
     }
 
     private void waitForReconnect() {
-        HostGUI.clientDisconnected();
         try {
             out.close();
             in.close();
@@ -77,8 +85,8 @@ public class Network {
 
         try {
             Socket newSocket = serverSocket.accept();
-            out = new PrintWriter(newSocket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(newSocket.getInputStream()));
+            out = newSocket.getOutputStream();
+            in = newSocket.getInputStream();
             HostGUI.displayGameState();
             sendGameState(state);
             listenForClientMessages();

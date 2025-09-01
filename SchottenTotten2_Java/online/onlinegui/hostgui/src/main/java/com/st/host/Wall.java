@@ -1,6 +1,14 @@
 package com.st.host;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import com.st.proto.Wall.StatusProto;
+import com.st.proto.Wall.WallProto;
 
 public class Wall {
     private final int wallIndex;
@@ -19,7 +27,22 @@ public class Wall {
     private static final int MULTIPLIER = 100;
 
     public enum Status {
-        BROKEN, DAMAGED, INTACT
+        BROKEN, DAMAGED, INTACT;
+
+        public StatusProto toProto() {
+            switch (this) {
+                case Status.BROKEN -> {
+                    return StatusProto.BROKEN;
+                }
+                case Status.DAMAGED -> {
+                    return StatusProto.DAMAGED;
+                }
+                case Status.INTACT -> {
+                    return StatusProto.INTACT;
+                }
+            }
+            throw new AssertionError();
+        }
     }
 
     public Wall(int wallIndex, int intactLength, int damagedLength, WallPattern intactPattern, WallPattern damagedPattern) {
@@ -223,5 +246,25 @@ public class Wall {
         }
 
         return FormationType.SUM;
+    }
+
+    public WallProto toProto() {
+        WallProto.Builder builder = WallProto.newBuilder();
+        builder.setWallIndex(wallIndex);
+        builder.setStatus(status.toProto());
+        builder.setLength(length);
+        builder.setIntactLength(intactLength);
+        builder.setDamagedLength(damagedLength);
+        builder.setPattern(pattern.toProto());
+        builder.setIntactPattern(intactPattern.toProto());
+        builder.setDamagedPattern(damagedPattern.toProto());
+        for (Card c : attackerCards) {
+            builder.addAttackerCards(c.toProto());
+        }
+        for (Card c : defenderCards) {
+            builder.addDefenderCards(c.toProto());
+        }
+        builder.setAttackerFinishedFirst(attackerFinishedFirst);
+        return builder.build();
     }
 }

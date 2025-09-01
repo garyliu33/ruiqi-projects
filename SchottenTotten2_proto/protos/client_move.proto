@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.st.proto;
+
+import "card.proto";
+
+message ClientMoveProto {
+    optional CardProto card = 1;
+    optional int32 wall_index = 2;
+}
