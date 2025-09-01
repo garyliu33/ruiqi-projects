@@ -35,7 +35,7 @@ impl TableView {
         }
     }
 
-    pub fn draw(&mut self) {
+    pub fn draw(&self) {
         self.opponent_hand_view.draw();
         self.opponent_played_card_view.draw();
         self.opponent_stat_view.draw();
@@ -45,7 +45,7 @@ impl TableView {
         self.your_stat_view.draw();
     }
 
-    pub fn draw_with_message(&mut self, str: String) {
+    pub fn draw_with_message(&self, str: String) {
         self.draw();
         MessageView::new(str, screen_width() / 2.0, screen_height() / 2.0).draw();
     }

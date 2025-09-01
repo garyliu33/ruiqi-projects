@@ -1,6 +1,7 @@
-use macroquad::color::{BLUE, GREEN, ORANGE, PURPLE, RED, YELLOW};
+use macroquad::color::{Color, BLUE, GRAY, GREEN, PURPLE, RED, YELLOW};
+use crate::piece_color::PieceColor::{Red, Yellow, Green, Blue, Purple, Gray};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum PieceColor {
     Red,
     Yellow,
@@ -10,33 +11,39 @@ pub enum PieceColor {
     Gray
 }
 
-static DISPLAY_COLORS: [macroquad::color::Color; 6] = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE];
-
 impl PieceColor {
     pub fn get_color(i: usize) -> PieceColor {
         match i {
-            0 => PieceColor::Red,
-            1 => PieceColor::Yellow,
-            2 => PieceColor::Green,
-            3 => PieceColor::Blue,
-            4 => PieceColor::Purple,
-            5 => PieceColor::Gray,
+            0 => Red,
+            1 => Yellow,
+            2 => Green,
+            3 => Blue,
+            4 => Purple,
+            5 => Gray,
             _ => unreachable!()
         }
     }
 
     pub fn get_index(&self) -> usize {
         match self {
-            PieceColor::Red => 0,
-            PieceColor::Yellow => 1,
-            PieceColor::Green => 2,
-            PieceColor::Blue => 3,
-            PieceColor::Purple => 4,
-            PieceColor::Gray => 5
+            Red => 0,
+            Yellow => 1,
+            Green => 2,
+            Blue => 3,
+            Purple => 4,
+            Gray => 5
         }
     }
 
-    pub fn get_display_color(&self) -> macroquad::color::Color {
-        DISPLAY_COLORS[self.get_index()]
+    pub fn get_display_color(&self) -> Color {
+        match self.get_index() {
+            0 => RED,
+            1 => YELLOW,
+            2 => GREEN,
+            3 => BLUE,
+            4 => PURPLE,
+            5 => GRAY,
+            _ => unreachable!()
+        }
     }
 }

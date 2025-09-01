@@ -10,32 +10,15 @@ impl Cell {
     fn new(right: Option<usize>, top_right: Option<usize>, top_left: Option<usize>, left: Option<usize>, bottom_left: Option<usize>, bottom_right: Option<usize>) -> Self {
         Self { color: None, neighbors: [right, top_right, top_left, left, bottom_left, bottom_right] }
     }
-    
-    fn set_color(&mut self, color: PieceColor) {
-        self.color = Some(color);
-    }
-    
-    fn set_empty(&mut self) {
-        self.color = None;
-    }
 }
 
-static TRIANGLES: [[usize; 10]; 6] = [
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-    [19, 20, 21, 22, 32, 33, 34, 44, 45, 55],
-    [74, 84, 85, 95, 96, 97, 107, 108, 109, 110],
-    [111, 112, 113, 114, 115, 116, 117, 118, 119, 120],
-    [65, 75, 76, 86, 87, 88, 98, 99, 100, 101],
-    [10, 11, 12, 13, 23, 24, 25, 35, 36, 46]
-];
-
 pub struct Board {
-    cells: Vec<Cell>
+    pub(crate) cells: [Cell; 121]
 }
 
 impl Board {
     pub fn new() -> Self {
-        Self { cells: vec![
+        Self { cells: [
             Cell::new(None, None, None, None, Some(1), Some(2)),
             Cell::new(Some(2), Some(0), None, None, Some(3), Some(4)),
             Cell::new(None, None, Some(0), Some(1), Some(4), Some(5)),
@@ -232,3 +215,12 @@ impl Board {
         self.cells[i].neighbors[dir]
     }
 }
+
+static TRIANGLES: [[usize; 10]; 6] = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [19, 20, 21, 22, 32, 33, 34, 44, 45, 55],
+    [74, 84, 85, 95, 96, 97, 107, 108, 109, 110],
+    [111, 112, 113, 114, 115, 116, 117, 118, 119, 120],
+    [65, 75, 76, 86, 87, 88, 98, 99, 100, 101],
+    [10, 11, 12, 13, 23, 24, 25, 35, 36, 46]
+];

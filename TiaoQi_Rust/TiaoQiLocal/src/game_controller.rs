@@ -1,19 +1,80 @@
-use crate::board::Board;
+use std::collections::HashSet;
+use crate::board::{Board, PieceColor};
+use crate::board_view::BoardView;
 
 pub struct GameController {
-    board: Board
+    board: Board,
+    board_view: BoardView,
+    ids: Vec<usize>,
+    current_turn: usize,
+    selected_piece: Option<usize>
 }
 
 impl GameController {
     pub fn new(num_players: usize) -> Self {
         let mut board = Board::new();
-        board.setup(match num_players {
+
+        let ids = match num_players {
             2 => vec![0, 3],
             3 => vec![0, 2, 4],
             4 => vec![0, 1, 3, 4],
             6 => vec![0, 1, 2, 3, 4, 5],
             _ => unreachable!()
-        });
-        Self { board }
+        };
+        board.setup(ids.clone());
+        let board_view = BoardView::new(&board);
+        Self { board, board_view, ids, current_turn: 0, selected_piece: None }
+    }
+
+    pub fn handle_click(&mut self) {
+        let current_color = PieceColor::get_color(self.ids[self.current_turn]);
+        if let Some(clicked) = self.board_view.get_hovered_cell() {
+            match self.selected_piece {
+                Some(selected) => {
+                    if clicked == selected {
+                        self.selected_piece = None;
+                        return;
+                    }
+
+                    if self.board.get_possible_moves(selected).contains(&clicked) {
+                        self.board.move_piece(selected, clicked);
+                        self.current_turn = (self.current_turn + 1) % self.ids.len();
+                        self.selected_piece = None;
+                    } else if self.board.cells[clicked].color == Some(current_color) {
+                        self.selected_piece = Some(clicked);
+                    } else {
+                        self.selected_piece = None;
+                    }
+                }
+                None => {
+                    if self.board.cells[clicked].color == Some(current_color) {
+                        self.selected_piece = Some(clicked);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn display_board(&mut self) {
+        self.board_view.update_board(&self.board, self.get_clickable_cells(), self.selected_piece);
+        self.board_view.draw();
+    }
+
+    fn get_clickable_cells(&self) -> HashSet<usize> {
+        let mut result = HashSet::new();
+
+        for i in 0..121 {
+            if self.board.cells[i].color == Some(PieceColor::get_color(self.ids[self.current_turn])) {
+                result.insert(i);
+            }
+        }
+
+        if let Some(i) = self.selected_piece {
+            for j in self.board.get_possible_moves(i) {
+                result.insert(j);
+            }
+        }
+
+        result
     }
 }
