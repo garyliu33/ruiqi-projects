@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 
 import com.st.common.Card;
 import com.st.common.CardColor;
+import com.st.common.CardView;
 import com.st.common.Constants;
 
 public class DiscardView extends JPanel {

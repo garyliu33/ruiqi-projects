@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import javax.swing.JFrame;
 
 import com.st.common.Card;
+import com.st.common.CardView;
 import com.st.common.Constants;
 
 public class Test {

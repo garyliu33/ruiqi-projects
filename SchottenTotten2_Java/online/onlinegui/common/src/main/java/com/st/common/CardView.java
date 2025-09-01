@@ -1,4 +1,4 @@
-package com.st.client;
+package com.st.common;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -10,16 +10,36 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Objects;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
-
-import com.st.common.Card;
-import com.st.common.Constants;
 
 public class CardView extends JPanel {
     private final Card card;
     private final boolean isLastPlayed;
+
+    private static BufferedImage retreatCard;
+    private static BufferedImage cauldronCard;
+
+    static {
+        try {
+            retreatCard = ImageIO.read(Objects.requireNonNull(CardView.class.getResource("/retreat.png")));
+        } catch (IOException | IllegalArgumentException | NullPointerException e) {
+            e.printStackTrace();
+            retreatCard = null;
+        }
+
+        try {
+            cauldronCard = ImageIO.read(Objects.requireNonNull(CardView.class.getResource("/cauldron.png")));
+        } catch (IOException | IllegalArgumentException | NullPointerException e) {
+            e.printStackTrace();
+            cauldronCard = null;
+        }
+    }
 
     public CardView(Card card, boolean isLastPlayed) {
         this.card = card;
@@ -67,11 +87,19 @@ public class CardView extends JPanel {
             FontMetrics fm = g2.getFontMetrics();
             int padding = 5;
             if (card.equals(Card.RETREAT)) {
-                g2.drawString("RETR", padding, fm.getAscent() + padding);
-                g2.drawString("EAT", padding, fm.getAscent() + padding + fm.getHeight());
+                if (retreatCard != null) {
+                    g2.drawImage(retreatCard, 0, 0, Constants.CARD_WIDTH, Constants.CARD_HEIGHT, this);
+                } else {
+                    g2.drawString("RETR", padding, fm.getAscent() + padding);
+                    g2.drawString("EAT", padding, fm.getAscent() + padding + fm.getHeight());
+                }
             } else if (card.equals(Card.CAULDRON)) {
-                g2.drawString("CAUL", padding, fm.getAscent() + padding);
-                g2.drawString("DRON", padding, fm.getAscent() + padding + fm.getHeight());
+                if (cauldronCard != null) {
+                    g2.drawImage(cauldronCard, 0, 0, Constants.CARD_WIDTH, Constants.CARD_HEIGHT, this);
+                } else {
+                    g2.drawString("CAUL", padding, fm.getAscent() + padding);
+                    g2.drawString("DRON", padding, fm.getAscent() + padding + fm.getHeight());
+                }
             } else {
                 String text = card.getValue() + "";
                 int y = fm.getAscent() + padding;
@@ -99,10 +127,10 @@ public class CardView extends JPanel {
 
                 g2.dispose();
             }
-        }
 
-        if (isLastPlayed) {
-            setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
+            if (isLastPlayed) {
+                setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
+            }
         }
     }
 

@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import com.st.common.Card;
+import com.st.common.CardView;
 import com.st.common.Constants;
 import com.st.common.Wall;
 
