@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use macroquad::input::{is_mouse_button_pressed, MouseButton};
 use macroquad::prelude::screen_width;
 use macroquad::window::screen_height;
 use crate::board::{Board, Cell, PieceColor};

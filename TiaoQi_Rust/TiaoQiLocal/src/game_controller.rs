@@ -27,7 +27,6 @@ impl GameController {
     }
 
     pub fn handle_click(&mut self) {
-        let current_color = PieceColor::get_color(self.ids[self.current_turn]);
         if let Some(clicked) = self.board_view.get_hovered_cell() {
             match self.selected_piece {
                 Some(selected) => {
@@ -40,14 +39,14 @@ impl GameController {
                         self.board.move_piece(selected, clicked);
                         self.current_turn = (self.current_turn + 1) % self.ids.len();
                         self.selected_piece = None;
-                    } else if self.board.cells[clicked].color == Some(current_color) {
+                    } else if self.board.cells[clicked].color == Some(self.get_current_color()) {
                         self.selected_piece = Some(clicked);
                     } else {
                         self.selected_piece = None;
                     }
                 }
                 None => {
-                    if self.board.cells[clicked].color == Some(current_color) {
+                    if self.board.cells[clicked].color == Some(self.get_current_color()) {
                         self.selected_piece = Some(clicked);
                     }
                 }
@@ -64,7 +63,7 @@ impl GameController {
         let mut result = HashSet::new();
 
         for i in 0..121 {
-            if self.board.cells[i].color == Some(PieceColor::get_color(self.ids[self.current_turn])) {
+            if self.board.cells[i].color == Some(self.get_current_color()) {
                 result.insert(i);
             }
         }
@@ -76,5 +75,9 @@ impl GameController {
         }
 
         result
+    }
+
+    fn get_current_color(&self) -> PieceColor {
+        PieceColor::get_color(self.ids[self.current_turn])
     }
 }

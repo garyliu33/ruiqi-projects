@@ -7,6 +7,8 @@ mod cell_view;
 mod piece_color;
 mod display_constants;
 
+use std::io;
+use std::io::Write;
 use macroquad::prelude::*;
 use crate::game_controller::GameController;
 
@@ -28,9 +30,31 @@ async fn main() {
             game_controller.handle_click();
         }
 
-        clear_background(WHITE);
+        clear_background(BLACK);
         game_controller.display_board();
-        
         next_frame().await;
+    }
+}
+
+static VALID_PLAYER_NUMS: [usize; 4] = [2, 3, 4, 6];
+
+fn get_num_players() -> usize {
+    loop {
+        print!("Enter number of players: ");
+        io::stdout().flush().expect("failed to flush output");
+        let mut n = String::new();
+        io::stdin().read_line(&mut n).expect("failed to read line");
+
+        match n.trim().parse::<usize>() {
+            Ok(num) => {
+                if VALID_PLAYER_NUMS.contains(&num) {
+                    return num;
+                } else {
+                    println!("Invalid number of players");
+                }
+            } Err(_) => {
+                println!("Invalid input");
+            }
+        }
     }
 }
