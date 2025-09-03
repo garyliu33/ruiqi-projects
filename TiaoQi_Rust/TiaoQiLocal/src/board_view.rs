@@ -3,9 +3,10 @@ use macroquad::color::WHITE;
 use macroquad::prelude::{draw_text, screen_width};
 use macroquad::text::measure_text;
 use macroquad::window::screen_height;
-use crate::board::{Board, Cell, PieceColor};
+use crate::board::{Board, Cell};
 use crate::cell_view::CellView;
 use crate::display_constants::{R3, CELL_LOCATION_SCALE};
+use crate::piece_color::PieceColor;
 
 pub struct BoardView {
     cells: [CellView; 121],
@@ -32,11 +33,12 @@ impl BoardView {
         }
     }
 
-    pub fn update_board(&mut self, board: &Board, clickable_cells: HashSet<usize>, selected_piece: Option<usize>) {
+    pub fn update_board(&mut self, board: &Board, clickable_cells: HashSet<usize>, selected_piece: Option<usize>, previous_move_path: Vec<usize>) {
         for i in 0..121 {
             self.cells[i].set_color(board.cells[i].color);
             self.cells[i].set_clickable(clickable_cells.contains(&i));
             self.cells[i].set_selected(false);
+            self.cells[i].set_was_previous_move(previous_move_path.contains(&i));
         }
 
         if let Some(piece) = selected_piece {
