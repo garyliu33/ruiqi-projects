@@ -59,6 +59,14 @@ impl GameController {
         self.board_view.draw();
     }
 
+    pub fn get_winner(&self) -> Option<PieceColor> {
+        self.board.get_winner()
+    }
+
+    pub fn display_winner(&self, winner: PieceColor) {
+        self.board_view.display_winner(winner);
+    }
+
     fn get_clickable_cells(&self) -> HashSet<usize> {
         let mut result = HashSet::new();
 

@@ -25,21 +25,21 @@ impl CellView {
             Some(piece_color) => {
                 let mut color = piece_color.get_display_color();
                 draw_circle(self.x, self.y, RADIUS, color);
-                draw_circle_lines(self.x, self.y, RADIUS, 2.0, WHITE);
+                draw_circle_lines(self.x, self.y, RADIUS, 2.0, LIGHTGRAY);
 
                 if self.selected {
-                    color = Color::new(1.0, 1.0, 1.0, 0.9);
+                    color = Color::new(1.0, 1.0, 1.0, 1.0);
                     draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 15.0, color, transparent(color)));
                 } else if self.is_hovered() {
-                    color = Color::new(1.0, 1.0, 1.0, 0.6);
+                    color = Color::new(1.0, 1.0, 1.0, 0.7);
                     draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
                 } else if self.clickable {
-                    color.a = 0.6;
+                    color.a = 0.7;
                     draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
                 }
             }
             None => {
-                draw_circle_lines(self.x, self.y, RADIUS, 2.0, WHITE);
+                draw_circle_lines(self.x, self.y, RADIUS, 2.0, LIGHTGRAY);
 
                 let mut color = WHITE;
                 if self.is_hovered() {

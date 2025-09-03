@@ -24,14 +24,19 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut game_controller = GameController::new(6);
+    let mut game_controller = GameController::new(get_num_players());
     loop {
-        if is_mouse_button_pressed(MouseButton::Left) {
-            game_controller.handle_click();
-        }
-
         clear_background(BLACK);
         game_controller.display_board();
+        
+        if let Some(winner) = game_controller.get_winner() {
+            game_controller.display_winner(winner);
+        } else {
+            if is_mouse_button_pressed(MouseButton::Left) {
+                game_controller.handle_click();
+            }
+        }
+        
         next_frame().await;
     }
 }
