@@ -1,5 +1,5 @@
-use std::collections::HashSet;
-pub(crate) use crate::piece_color::PieceColor;
+use std::collections::{HashSet, VecDeque};
+use crate::piece_color::PieceColor;
 
 pub struct Cell {
     pub color: Option<PieceColor>,
@@ -200,6 +200,45 @@ impl Board {
         }
 
         result
+    }
+
+    pub fn find_path(&self, m: [usize; 2]) -> Vec<usize> {
+        let start = m[0];
+        let end = m[1];
+
+        for neighbor in self.cells[start].neighbors {
+            if let Some(n) = neighbor {
+                if end == n {
+                    return vec![start, end];
+                }
+            }
+        }
+
+        let mut to_explore: VecDeque<Vec<usize>> = VecDeque::new();
+        let mut visited: HashSet<usize> = HashSet::new();
+
+        to_explore.push_back(vec![start]);
+        visited.insert(start);
+
+        while let Some(path) = to_explore.pop_front() {
+            let current = *path.last().unwrap();
+            let single_jumps = self.get_single_jumps(current);
+            for jump in single_jumps {
+                if !visited.contains(&jump) {
+                    let mut new_path = path.clone();
+                    new_path.push(jump);
+
+                    if jump == end {
+                        return new_path;
+                    }
+
+                    to_explore.push_back(new_path);
+                    visited.insert(jump);
+                }
+            }
+        }
+
+        unreachable!()
     }
     
     pub fn move_piece(&mut self, start: usize, end: usize) {

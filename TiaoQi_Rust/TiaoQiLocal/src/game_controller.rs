@@ -1,13 +1,15 @@
 use std::collections::HashSet;
-use crate::board::{Board, PieceColor};
+use crate::board::{Board};
 use crate::board_view::BoardView;
+use crate::piece_color::PieceColor;
 
 pub struct GameController {
     board: Board,
     board_view: BoardView,
     ids: Vec<usize>,
     current_turn: usize,
-    selected_piece: Option<usize>
+    selected_piece: Option<usize>,
+    previous_move: Option<[usize; 2]>
 }
 
 impl GameController {
@@ -23,7 +25,7 @@ impl GameController {
         };
         board.setup(ids.clone());
         let board_view = BoardView::new(&board);
-        Self { board, board_view, ids, current_turn: 0, selected_piece: None }
+        Self { board, board_view, ids, current_turn: 0, selected_piece: None, previous_move: None }
     }
 
     pub fn handle_click(&mut self) {
@@ -37,6 +39,7 @@ impl GameController {
 
                     if self.board.get_possible_moves(selected).contains(&clicked) {
                         self.board.move_piece(selected, clicked);
+                        self.previous_move = Some([clicked, selected]);
                         self.current_turn = (self.current_turn + 1) % self.ids.len();
                         self.selected_piece = None;
                     } else if self.board.cells[clicked].color == Some(self.get_current_color()) {
@@ -55,7 +58,12 @@ impl GameController {
     }
 
     pub fn display_board(&mut self) {
-        self.board_view.update_board(&self.board, self.get_clickable_cells(), self.selected_piece);
+        let previous_move_path = match self.previous_move {
+            Some(previous_move) => self.board.find_path(previous_move),
+            None => Vec::new()
+        };
+
+        self.board_view.update_board(&self.board, self.get_clickable_cells(), self.selected_piece, previous_move_path);
         self.board_view.draw();
     }
 

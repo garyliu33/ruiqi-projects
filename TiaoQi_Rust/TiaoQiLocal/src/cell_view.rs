@@ -3,7 +3,7 @@ use macroquad::color::*;
 use macroquad::input::mouse_position;
 use macroquad::prelude::*;
 use macroquad::shapes::{draw_circle, draw_circle_lines};
-use crate::board::PieceColor;
+use crate::piece_color::PieceColor;
 use crate::display_constants::RADIUS;
 
 pub struct CellView {
@@ -12,12 +12,13 @@ pub struct CellView {
     x: f32,
     y: f32,
     clickable: bool,
-    selected: bool
+    selected: bool,
+    was_previous_move: bool
 }
 
 impl CellView {
     pub fn new(index: usize, color: Option<PieceColor>, x: f32, y: f32, clickable: bool) -> Self {
-        Self { index, color, x, y, clickable, selected: false }
+        Self { index, color, x, y, clickable, selected: false, was_previous_move: false }
     }
     
     pub fn draw(&self) {
@@ -28,13 +29,17 @@ impl CellView {
                 draw_circle_lines(self.x, self.y, RADIUS, 2.0, LIGHTGRAY);
 
                 if self.selected {
-                    color = Color::new(1.0, 1.0, 1.0, 1.0);
-                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 15.0, color, transparent(color)));
+                    color = Color::new(1.0, 1.0, 1.0, 0.9);
+                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 16.0, color, transparent(color)));
                 } else if self.is_hovered() {
                     color = Color::new(1.0, 1.0, 1.0, 0.7);
                     draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
                 } else if self.clickable {
                     color.a = 0.7;
+                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
+                } else if self.was_previous_move {
+                    color = YELLOW;
+                    color.a = 0.6;
                     draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
                 }
             }
@@ -47,6 +52,10 @@ impl CellView {
                 } else if self.clickable {
                     color.a = 0.4;
                     draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
+                }
+
+                if self.was_previous_move {
+                    draw_circle(self.x, self.y, 2.0, LIGHTGRAY);
                 }
             }
         }
@@ -71,6 +80,10 @@ impl CellView {
         }
 
         self.selected = select;
+    }
+
+    pub fn set_was_previous_move(&mut self, b: bool) {
+        self.was_previous_move = b;
     }
 
     pub fn index(&self) -> usize {
