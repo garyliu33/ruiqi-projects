@@ -13,7 +13,7 @@ impl Cell {
 }
 
 pub struct Board {
-    pub(crate) cells: [Cell; 121]
+    pub cells: [Cell; 121]
 }
 
 impl Board {
@@ -213,6 +213,24 @@ impl Board {
     
     fn get_neighbor(&self, i: usize, dir: usize) -> Option<usize> {
         self.cells[i].neighbors[dir]
+    }
+
+    pub fn get_winner(&self) -> Option<PieceColor> {
+        for i in 0..6 {
+            if self.has_won(i) {
+                return Some(PieceColor::get_color(i));
+            }
+        }
+        None
+    }
+
+    fn has_won(&self, color_index: usize) -> bool {
+        for i in TRIANGLES[(color_index + 3) % 6] {
+            if self.cells[i].color != Some(PieceColor::get_color(color_index)) {
+                return false;
+            }
+        }
+        true
     }
 }
 

@@ -1,5 +1,7 @@
 use std::collections::HashSet;
-use macroquad::prelude::screen_width;
+use macroquad::color::WHITE;
+use macroquad::prelude::{draw_text, screen_width};
+use macroquad::text::measure_text;
 use macroquad::window::screen_height;
 use crate::board::{Board, Cell, PieceColor};
 use crate::cell_view::CellView;
@@ -46,6 +48,21 @@ impl BoardView {
 
     pub fn get_hovered_cell(&self) -> Option<usize> {
         self.cells.iter().find(|c| c.is_hovered()).map(|c| c.index())
+    }
+
+    pub fn display_winner(&self, winner: PieceColor) {
+        let text = match winner {
+            PieceColor::Red => "Red wins!",
+            PieceColor::Orange => "Orange wins!",
+            PieceColor::Green => "Green wins!",
+            PieceColor::Cyan => "Cyan wins!",
+            PieceColor::Blue => "Blue wins!",
+            PieceColor::Purple => "Purple wins!"
+        };
+
+        let font_size = 80.0;
+        let text_dims = measure_text(text, None, font_size as u16, 1.0);
+        draw_text(text, (screen_width() - text_dims.width) / 2.0, (screen_height() + text_dims.height) / 2.0, font_size, WHITE);
     }
 }
 
