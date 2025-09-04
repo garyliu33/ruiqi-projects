@@ -38,8 +38,7 @@ impl CellView {
                     color.a = 0.7;
                     draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
                 } else if self.was_previous_move {
-                    color = YELLOW;
-                    color.a = 0.6;
+                    color.a = 0.9;
                     draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
                 }
             }

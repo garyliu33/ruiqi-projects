@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use macroquad::color::WHITE;
-use macroquad::prelude::{draw_text, screen_width};
+use macroquad::math::{vec2, Vec2};
+use macroquad::prelude::{draw_text, draw_triangle_lines, screen_width};
+use macroquad::shapes::draw_triangle;
 use macroquad::text::measure_text;
 use macroquad::window::screen_height;
 use crate::board::{Board, Cell};
@@ -9,18 +11,18 @@ use crate::display_constants::{R3, CELL_LOCATION_SCALE};
 use crate::piece_color::PieceColor;
 
 pub struct BoardView {
-    cells: [CellView; 121],
+    cells: [CellView; 121]
 }
 
 impl BoardView {
     pub fn new(board: &Board) -> Self {
         let cells = std::array::from_fn(|i| {
-            let color = board.cells[i].color;
+            let [x, y] = CELL_LOCATIONS[i];
             CellView::new(
                 i,
-                color,
-                screen_width() / 2.0 + CELL_LOCATIONS[i][0] * CELL_LOCATION_SCALE,
-                screen_height() / 2.0 + CELL_LOCATIONS[i][1] * CELL_LOCATION_SCALE,
+                board.cells[i].color,
+                screen_width() / 2.0 + x * CELL_LOCATION_SCALE,
+                screen_height() / 2.0 + y * CELL_LOCATION_SCALE,
                 false
             )
         });
@@ -31,6 +33,20 @@ impl BoardView {
         for cell in &self.cells {
             cell.draw();
         }
+
+        for i in 0..6 {
+            self.draw_triangle(i);
+        }
+    }
+
+    fn draw_triangle(&self, i: usize) {
+        let color = PieceColor::get_color(i).get_display_color();
+        let center = vec2(screen_width() / 2.0, screen_height() / 2.0);
+        let [c1, c2, c3] = TRIANGLE_CORNERS[(i + 3) % 6];
+        draw_triangle_lines(center + c1 * CELL_LOCATION_SCALE,
+                            center + c2 * CELL_LOCATION_SCALE,
+                            center + c3 * CELL_LOCATION_SCALE,
+                            3.0, color);
     }
 
     pub fn update_board(&mut self, board: &Board, clickable_cells: HashSet<usize>, selected_piece: Option<usize>, previous_move_path: Vec<usize>) {
@@ -190,4 +206,13 @@ static CELL_LOCATIONS: [[f32; 2]; 121] = [
     [-1.0, -7.0 * R3],
     [1.0, -7.0 * R3],
     [0.0, -8.0 * R3]
+];
+
+static TRIANGLE_CORNERS: [[Vec2; 3]; 6] = [
+    [vec2(0.0, 10.0 * R3), vec2(-6.0, 4.0 * R3), vec2(6.0, 4.0 * R3)],
+    [vec2(9.0, -1.0 * R3), vec2(3.0, 5.0 * R3), vec2(15.0, 5.0 * R3)],
+    [vec2(9.0, 1.0 * R3), vec2(3.0, -5.0 * R3), vec2(15.0, -5.0 * R3)],
+    [vec2(0.0, -10.0 * R3), vec2(-6.0, -4.0 * R3), vec2(6.0, -4.0 * R3)],
+    [vec2(-9.0, 1.0 * R3), vec2(-3.0, -5.0 * R3), vec2(-15.0, -5.0 * R3)],
+    [vec2(-9.0, -1.0 * R3), vec2(-3.0, 5.0 * R3), vec2(-15.0, 5.0 * R3)]
 ];
