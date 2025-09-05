@@ -258,7 +258,7 @@ pub enum SchottenTotten2Move {
 }
 
 impl SchottenTotten2Move {
-    fn to_proto(&self) -> com_st_proto::ClientMoveProto {
+    pub fn to_proto(&self) -> com_st_proto::ClientMoveProto {
         let (card_proto, tile_index) = match self {
             Self::PlayCard { card, tile_index } => (card.to_proto(), tile_index),
             Self::Retreat { tile_index } => (
