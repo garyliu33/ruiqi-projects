@@ -1,7 +1,11 @@
-use crate::game_state::GameState;
+use crate::game_state::{self, GameState};
 use rand::rng;
 use rand::seq::SliceRandom;
 use std::fmt;
+
+pub mod com_st_proto {
+    include!(concat!(env!("OUT_DIR"), "/com.st.proto.rs"));
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WinningType {
@@ -25,6 +29,61 @@ pub enum Color {
 pub struct Card {
     pub value: u8,
     pub color: Color,
+}
+
+impl Card {
+    fn to_proto(&self) -> com_st_proto::CardProto {
+        let color = match self.color {
+            Color::Red => com_st_proto::ColorProto::Red as i32,
+            Color::Blue => com_st_proto::ColorProto::Blue as i32,
+            Color::Yellow => com_st_proto::ColorProto::Yellow as i32,
+            Color::Green => com_st_proto::ColorProto::Green as i32,
+            Color::Gray => com_st_proto::ColorProto::Gray as i32,
+        };
+        com_st_proto::CardProto {
+            color: Some(color),
+            value: Some(self.value as i32),
+        }
+    }
+
+    fn from_proto(proto: &com_st_proto::CardProto) -> Card {
+        if let (Some(color), Some(value)) = (proto.color, proto.value) {
+            match com_st_proto::ColorProto::try_from(color) {
+                Ok(com_st_proto::ColorProto::Red) => {
+                    return Card {
+                        color: Color::Red,
+                        value: value as u8,
+                    };
+                }
+                Ok(com_st_proto::ColorProto::Blue) => {
+                    return Card {
+                        color: Color::Blue,
+                        value: value as u8,
+                    };
+                }
+                Ok(com_st_proto::ColorProto::Yellow) => {
+                    return Card {
+                        color: Color::Yellow,
+                        value: value as u8,
+                    };
+                }
+                Ok(com_st_proto::ColorProto::Green) => {
+                    return Card {
+                        color: Color::Green,
+                        value: value as u8,
+                    };
+                }
+                Ok(com_st_proto::ColorProto::Gray) => {
+                    return Card {
+                        color: Color::Gray,
+                        value: value as u8,
+                    };
+                }
+                _ => panic!("Unknown color"),
+            }
+        }
+        panic!("missing field in CardProto");
+    }
 }
 
 impl fmt::Display for Card {
@@ -93,6 +152,20 @@ pub enum WallPattern {
     None,
 }
 
+impl WallPattern {
+    fn from_proto(pattern: i32) -> WallPattern {
+        match com_st_proto::WallPatternProto::try_from(pattern) {
+            Ok(com_st_proto::WallPatternProto::Color) => WallPattern::Color,
+            Ok(com_st_proto::WallPatternProto::Run) => WallPattern::Run,
+            Ok(com_st_proto::WallPatternProto::Equals) => WallPattern::Equal,
+            Ok(com_st_proto::WallPatternProto::Plus) => WallPattern::Plus,
+            Ok(com_st_proto::WallPatternProto::Minus) => WallPattern::Minus,
+            Ok(com_st_proto::WallPatternProto::NonePattern) => WallPattern::None,
+            _ => panic!("unknown wall patern"),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct WallTile {
     pub id: usize,
@@ -104,6 +177,40 @@ pub struct WallTile {
     pub is_damaged_twice: bool,
     pub attacker_cards: Vec<Card>,
     pub defender_cards: Vec<Card>,
+}
+
+impl WallTile {
+    fn from_proto(proto: &com_st_proto::WallProto) -> WallTile {
+        let mut attacker_cards = vec![];
+        for card_proto in &proto.attacker_cards {
+            attacker_cards.push(Card::from_proto(card_proto));
+        }
+        let mut defender_cards = vec![];
+        for card_proto in &proto.defender_cards {
+            defender_cards.push(Card::from_proto(card_proto));
+        }
+
+        WallTile {
+            id: proto.wall_index.unwrap() as usize,
+            required_cards: proto.intact_length.unwrap() as usize,
+            wall_pattern: WallPattern::from_proto(proto.intact_pattern.unwrap()),
+            damaged_required_cards: proto.damaged_length.unwrap() as usize,
+            damaged_wall_pattern: WallPattern::from_proto(proto.damaged_pattern.unwrap()),
+            is_damaged: WallTile::get_status(proto.status.unwrap()).0,
+            is_damaged_twice: WallTile::get_status(proto.status.unwrap()).1,
+            attacker_cards: attacker_cards,
+            defender_cards: defender_cards,
+        }
+    }
+
+    fn get_status(status: i32) -> (bool, bool) {
+        match com_st_proto::StatusProto::try_from(status) {
+            Ok(com_st_proto::StatusProto::Intact) => (false, false),
+            Ok(com_st_proto::StatusProto::Damaged) => (true, false),
+            Ok(com_st_proto::StatusProto::Broken) => (true, true),
+            _ => panic!("unknown status"),
+        }
+    }
 }
 
 impl fmt::Display for WallTile {
@@ -150,6 +257,32 @@ pub enum SchottenTotten2Move {
     ThrowOilCauldron { tile_index: usize },
 }
 
+impl SchottenTotten2Move {
+    fn to_proto(&self) -> com_st_proto::ClientMoveProto {
+        let (card_proto, tile_index) = match self {
+            Self::PlayCard { card, tile_index } => (card.to_proto(), tile_index),
+            Self::Retreat { tile_index } => (
+                com_st_proto::CardProto {
+                    color: Some(com_st_proto::ColorProto::Action as i32),
+                    value: Some(-1),
+                },
+                tile_index,
+            ),
+            Self::ThrowOilCauldron { tile_index } => (
+                com_st_proto::CardProto {
+                    color: Some(com_st_proto::ColorProto::Action as i32),
+                    value: Some(-2),
+                },
+                tile_index,
+            ),
+        };
+        com_st_proto::ClientMoveProto {
+            card: Some(card_proto),
+            wall_index: Some(*tile_index as i32),
+        }
+    }
+}
+
 impl fmt::Display for SchottenTotten2Move {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -177,6 +310,71 @@ pub struct SchottenTotten2State {
 }
 
 impl SchottenTotten2State {
+    pub fn from_proto(proto: &com_st_proto::GameStateProto) -> Self {
+        let mut discard = vec![];
+        for (key, card_list_proto) in &proto.discard {
+            for card_proto in &card_list_proto.card_list {
+                discard.push(Card::from_proto(card_proto));
+            }
+        }
+        let host_hand = vec![];
+        let mut client_hand = vec![];
+        for card_proto in &proto.client_hand {
+            client_hand.push(Card::from_proto(card_proto));
+        }
+        let (host_role, client_role) = if proto.is_client_attacker {
+            (Role::Defender, Role::Attacker)
+        } else {
+            (Role::Attacker, Role::Defender)
+        };
+        let (attacker, defender) = if proto.is_client_attacker {
+            (
+                Player {
+                    hand: client_hand,
+                    role: Role::Attacker,
+                    oil_cauldrons: 0,
+                },
+                Player {
+                    hand: host_hand,
+                    role: Role::Defender,
+                    oil_cauldrons: proto.cauldron_count as u8,
+                },
+            )
+        } else {
+            (
+                Player {
+                    hand: host_hand,
+                    role: Role::Attacker,
+                    oil_cauldrons: 0,
+                },
+                Player {
+                    hand: client_hand,
+                    role: Role::Defender,
+                    oil_cauldrons: proto.cauldron_count as u8,
+                },
+            )
+        };
+        let player_to_move = match (proto.is_client_turn, proto.is_client_attacker) {
+            (true, true) => 0,
+            (true, false) => 1,
+            (false, true) => 1,
+            (false, false) => 0,
+        };
+        let mut wall_tiles = vec![];
+        for wall_tile_proto in &proto.walls {
+            wall_tiles.push(WallTile::from_proto(wall_tile_proto));
+        }
+        let damaged_tile_count = wall_tiles.iter().filter(|t| t.is_damaged).count() as u8;
+        SchottenTotten2State {
+            deck: vec![],
+            discard_pile: discard,
+            players: [attacker, defender],
+            wall_tiles: wall_tiles,
+            player_to_move_index: player_to_move,
+            attacker_damaged_tiles: damaged_tile_count,
+        }
+    }
+
     pub fn get_current_player(&self) -> &Player {
         &self.players[self.player_to_move_index]
     }
