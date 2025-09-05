@@ -1,5 +1,4 @@
 use macroquad::color::*;
-use crate::piece_color::PieceColor::{Red, Orange, Green, Blue, Purple, Cyan};
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum PieceColor {
@@ -14,24 +13,24 @@ pub enum PieceColor {
 impl PieceColor {
     pub fn get_color(i: usize) -> PieceColor {
         match i {
-            0 => Red,
-            1 => Orange,
-            2 => Green,
-            3 => Cyan,
-            4 => Blue,
-            5 => Purple,
+            0 => PieceColor::Red,
+            1 => PieceColor::Orange,
+            2 => PieceColor::Green,
+            3 => PieceColor::Cyan,
+            4 => PieceColor::Blue,
+            5 => PieceColor::Purple,
             _ => unreachable!()
         }
     }
 
     pub fn get_display_color(&self) -> Color {
         match self {
-            Red => RED,
-            Orange => ORANGE,
-            Green => GREEN,
-            Cyan => Color::from_rgba(13, 212, 252, 255),
-            Blue => Color::from_rgba(0, 55, 255, 255),
-            Purple => PURPLE,
+            PieceColor::Red => RED,
+            PieceColor::Orange => ORANGE,
+            PieceColor::Green => GREEN,
+            PieceColor::Cyan => Color::from_rgba(13, 212, 252, 255),
+            PieceColor::Blue => Color::from_rgba(0, 55, 255, 255),
+            PieceColor::Purple => PURPLE,
         }
     }
 }

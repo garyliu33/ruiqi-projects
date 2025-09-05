@@ -1,6 +1,7 @@
 use std::collections::HashSet;
-use crate::board::{Board};
+use crate::board::Board;
 use crate::board_view::BoardView;
+use crate::display_constants::DISPLAY_CONSTANTS;
 use crate::piece_color::PieceColor;
 
 pub struct GameController {
@@ -65,6 +66,10 @@ impl GameController {
 
         self.board_view.update_board(&self.board, self.get_clickable_cells(), self.selected_piece, previous_move_path);
         self.board_view.draw();
+    }
+    
+    pub fn update_cell_positions(&mut self) {
+        self.board_view.update_positions(&DISPLAY_CONSTANTS.get().unwrap().read().unwrap());
     }
 
     pub fn get_winner(&self) -> Option<PieceColor> {

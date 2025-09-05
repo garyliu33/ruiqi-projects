@@ -1,10 +1,7 @@
 use std::f32::consts::PI;
-use macroquad::color::*;
-use macroquad::input::mouse_position;
 use macroquad::prelude::*;
-use macroquad::shapes::{draw_circle, draw_circle_lines};
 use crate::piece_color::PieceColor;
-use crate::display_constants::RADIUS;
+use crate::display_constants::*;
 
 pub struct CellView {
     index: usize,
@@ -22,53 +19,62 @@ impl CellView {
     }
     
     pub fn draw(&self) {
+        let constants = DISPLAY_CONSTANTS.get().unwrap().read().unwrap();
+        let r = constants.radius + constants.thickness;
+
         match self.color {
             Some(piece_color) => {
                 let mut color = piece_color.get_display_color();
-                draw_circle(self.x, self.y, RADIUS, color);
-                draw_circle_lines(self.x, self.y, RADIUS, 2.0, LIGHTGRAY);
+                draw_circle(self.x, self.y, constants.radius, color);
+                draw_circle_lines(self.x, self.y, constants.radius, constants.thickness, LIGHTGRAY);
 
                 if self.selected {
                     color = Color::new(1.0, 1.0, 1.0, 0.9);
-                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 16.0, color, transparent(color)));
+                    draw_mesh(&gradient_ring_mesh(self.x, self.y, r, constants.thick_highlight, color, transparent(color)));
                 } else if self.is_hovered() {
                     color = Color::new(1.0, 1.0, 1.0, 0.7);
-                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
+                    draw_mesh(&gradient_ring_mesh(self.x, self.y, r, constants.thin_highlight, color, transparent(color)));
                 } else if self.clickable {
                     color.a = 0.7;
-                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
+                    draw_mesh(&gradient_ring_mesh(self.x, self.y, r, constants.thin_highlight, color, transparent(color)));
                 } else if self.was_previous_move {
                     color.a = 0.9;
-                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
+                    draw_mesh(&gradient_ring_mesh(self.x, self.y, r, constants.thin_highlight, color, transparent(color)));
                 }
             }
             None => {
-                draw_circle_lines(self.x, self.y, RADIUS, 2.0, LIGHTGRAY);
+                draw_circle_lines(self.x, self.y, constants.radius, constants.thickness, LIGHTGRAY);
 
-                let mut color = WHITE;
                 if self.is_hovered() {
-                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
+                    let color = Color::new(1.0, 1.0, 1.0, 0.9);
+                    draw_mesh(&gradient_ring_mesh(self.x, self.y, r, constants.thin_highlight, color, transparent(color)));
                 } else if self.clickable {
-                    color.a = 0.4;
-                    draw_mesh(&gradient_ring_mesh(self.x, self.y, RADIUS + 2.0, 12.0, color, transparent(color)));
+                    let color = Color::new(1.0, 1.0, 1.0, 0.7);
+                    draw_mesh(&gradient_ring_mesh(self.x, self.y, r, constants.thin_highlight, color, transparent(color)));
                 }
 
                 if self.was_previous_move {
-                    draw_circle(self.x, self.y, 2.0, LIGHTGRAY);
+                    draw_circle(self.x, self.y, constants.thickness, LIGHTGRAY);
                 }
             }
         }
     }
-    
+
+    pub fn is_hovered(&self) -> bool {
+        let radius = DISPLAY_CONSTANTS.get().unwrap().read().unwrap().radius;
+        let (mx, my) = mouse_position();
+        self.clickable && (mx - self.x).powf(2.0) + (my - self.y).powf(2.0) <= radius.powf(2.0)
+    }
+
+    pub fn set_position(&mut self, x: f32, y: f32) {
+        self.x = x;
+        self.y = y;
+    }
+
     pub fn set_color(&mut self, color: Option<PieceColor>) {
         self.color = color;
     }
 
-    pub fn is_hovered(&self) -> bool {
-        let (mx, my) = mouse_position();
-        self.clickable && (mx - self.x).powf(2.0) + (my - self.y).powf(2.0) <= RADIUS.powf(2.0)
-    }
-    
     pub fn set_clickable(&mut self, clickable: bool) {
         self.clickable = clickable;
     }
