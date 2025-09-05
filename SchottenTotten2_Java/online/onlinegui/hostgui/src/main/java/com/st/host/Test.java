@@ -1,7 +1,12 @@
 package com.st.host;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.FlowLayout;
+
+import javax.swing.JFrame;
+
+import com.st.common.Card;
+import com.st.common.CardView;
+import com.st.common.Constants;
 
 public class Test {
     public static void main(String[] args) {

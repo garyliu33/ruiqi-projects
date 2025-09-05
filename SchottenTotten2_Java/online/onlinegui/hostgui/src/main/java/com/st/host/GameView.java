@@ -1,7 +1,14 @@
 package com.st.host;
 
-import javax.swing.*;
 import java.util.function.Consumer;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+
+import com.st.common.Card;
+import com.st.common.GameState;
+import com.st.common.Wall;
 
 public class GameView extends JPanel {
     private HandView hostHandView;

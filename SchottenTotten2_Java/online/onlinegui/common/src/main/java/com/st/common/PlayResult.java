@@ -1,6 +1,7 @@
-package com.st.host;
+package com.st.common;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PlayResult {
     private final Type type;

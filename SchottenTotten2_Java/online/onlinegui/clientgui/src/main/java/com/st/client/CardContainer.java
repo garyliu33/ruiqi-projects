@@ -1,7 +1,12 @@
 package com.st.client;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+
+import javax.swing.JPanel;
+
+import com.st.common.Card;
+import com.st.common.CardView;
+import com.st.common.Constants;
 
 public class CardContainer extends JPanel {
     private final CardView cardView;

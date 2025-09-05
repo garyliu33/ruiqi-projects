@@ -1,4 +1,4 @@
-package com.st.client;
+package com.st.common;
 
 import java.util.Objects;
 
