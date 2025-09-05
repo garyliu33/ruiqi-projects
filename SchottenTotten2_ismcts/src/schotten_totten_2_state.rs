@@ -307,6 +307,7 @@ pub struct SchottenTotten2State {
     pub wall_tiles: Vec<WallTile>,
     pub player_to_move_index: usize,
     pub attacker_damaged_tiles: u8,
+    pub is_client_turn: bool,
 }
 
 impl SchottenTotten2State {
@@ -372,6 +373,7 @@ impl SchottenTotten2State {
             wall_tiles: wall_tiles,
             player_to_move_index: player_to_move,
             attacker_damaged_tiles: damaged_tile_count,
+            is_client_turn: proto.is_client_turn,
         }
     }
 
@@ -641,6 +643,7 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
             wall_tiles,
             player_to_move_index: 0,
             attacker_damaged_tiles: 0,
+            is_client_turn: false,
         }
     }
 

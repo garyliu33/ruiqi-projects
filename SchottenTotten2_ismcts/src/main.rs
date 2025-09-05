@@ -71,6 +71,9 @@ fn main() {
     loop {
         let game_state_proto = read_delimited::<com_st_proto::GameStateProto>(&mut stream).unwrap();
         let schotten_totten_2_state = SchottenTotten2State::from_proto(&game_state_proto);
+        if !schotten_totten_2_state.is_client_turn {
+            continue;
+        }
         let m = parallel_multi_observer_ismcts(&schotten_totten_2_state, 10000, 10);
         let move_proto = m.to_proto();
         write_delimited(&mut stream, &move_proto).unwrap();
