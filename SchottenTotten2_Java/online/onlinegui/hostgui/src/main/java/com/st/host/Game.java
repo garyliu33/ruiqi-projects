@@ -1,6 +1,12 @@
 package com.st.host;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.st.common.Card;
+import com.st.common.Constants;
+import com.st.common.Wall;
+import com.st.common.Winner;
 
 public record Game(Player attacker, Player defender, Board board, Deck deck, Discard discard) {
 
@@ -16,7 +22,7 @@ public record Game(Player attacker, Player defender, Board board, Deck deck, Dis
 
     public void declareControl() {
         List<Card> remainingCards = new ArrayList<>();
-        for (Card card : Constants.ALL_CARDS) {
+        for (var card : Constants.ALL_CARDS) {
             if (!discard.contains(card) && !board.contains(card)) {
                 remainingCards.add(card);
             }

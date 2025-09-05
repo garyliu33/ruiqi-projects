@@ -1,13 +1,22 @@
-package com.st.host;
+package com.st.common;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
+
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
 
 public class CardView extends JPanel {
     private final Card card;

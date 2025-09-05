@@ -1,4 +1,4 @@
-package com.st.host;
+package com.st.common;
 
 import com.st.proto.Wall.WallPatternProto;
 
@@ -38,6 +38,30 @@ public enum WallPattern {
             }
             case WallPattern.NONE -> {
                 return WallPatternProto.NONE_PATTERN;
+            }
+        }
+        throw new AssertionError();
+    }
+
+    public static WallPattern fromProto(WallPatternProto proto) {
+        switch (proto) {
+            case WallPatternProto.COLOR -> {
+                return WallPattern.COLOR;
+            }
+            case WallPatternProto.RUN -> {
+                return WallPattern.RUN;
+            }
+            case WallPatternProto.EQUALS -> {
+                return WallPattern.EQUALS;
+            }
+            case WallPatternProto.PLUS -> {
+                return WallPattern.PLUS;
+            }
+            case WallPatternProto.MINUS -> {
+                return WallPattern.MINUS;
+            }
+            case WallPatternProto.NONE_PATTERN -> {
+                return WallPattern.NONE;
             }
         }
         throw new AssertionError();

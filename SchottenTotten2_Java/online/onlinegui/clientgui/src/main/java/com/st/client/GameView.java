@@ -1,7 +1,12 @@
 package com.st.client;
 
 import javax.swing.*;
+
 import java.util.function.Consumer;
+
+import com.st.common.Card;
+import com.st.common.GameState;
+import com.st.common.Wall;
 
 public class GameView extends JPanel {
     private HandView clientHandView;
@@ -24,9 +29,15 @@ public class GameView extends JPanel {
 
     public void updateLayout(Consumer<Wall> onWallClicked) {
         removeAll();
-        HandView hostHandView = new HandView(gameState.getHostHand(), !gameState.isClientAttacker(), gameState.getCauldronCount(), gameState.getHasUsedCauldron(), true, !gameState.isClientTurn());
-        clientHandView = new HandView(gameState.getClientHand(), gameState.isClientAttacker(), gameState.getCauldronCount(), gameState.getHasUsedCauldron(), false, gameState.isClientTurn());
-        TableView tableView = new TableView(gameState.getWalls(), gameState.getDeckSize(), gameState.getDiscard(), onWallClicked, !gameState.isClientAttacker(), gameState.getLastPlayedCard());
+        HandView hostHandView = new HandView(gameState.getHostHand(), !gameState.isClientAttacker(),
+                gameState.getCauldronCount(), gameState.hasUsedCauldron(), true,
+                !gameState.isClientTurn());
+        clientHandView = new HandView(gameState.getClientHand(), gameState.isClientAttacker(),
+                gameState.getCauldronCount(), gameState.hasUsedCauldron(), false,
+                gameState.isClientTurn());
+        TableView tableView = new TableView(gameState.getWalls(), gameState.getDeckSize(),
+                gameState.getDiscard(), onWallClicked, !gameState.isClientAttacker(),
+                gameState.getLastPlayedCard());
 
         add(hostHandView);
         add(Box.createVerticalGlue());

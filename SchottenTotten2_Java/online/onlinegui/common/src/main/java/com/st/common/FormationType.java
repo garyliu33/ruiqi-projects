@@ -1,4 +1,4 @@
-package com.st.host;
+package com.st.common;
 
 public enum FormationType {
     COLOR_RUN(4),

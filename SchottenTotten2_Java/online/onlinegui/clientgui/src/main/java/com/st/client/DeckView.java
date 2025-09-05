@@ -1,7 +1,15 @@
 package com.st.client;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+
+import com.st.common.Constants;
 
 public class DeckView extends JPanel {
     public DeckView(int deckSize) {

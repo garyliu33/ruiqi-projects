@@ -1,9 +1,16 @@
 package com.st.client;
 
-import javax.swing.*;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+
+import com.st.common.Card;
+import com.st.common.CardColor;
+import com.st.common.Wall;
 
 public class TableView extends JPanel {
     public TableView(Wall[] walls, int deckSize, Map<CardColor, List<Card>> discard, Consumer<Wall> onWallClicked, boolean isHostAttacker, Card lastPlayedCard) {

@@ -1,11 +1,16 @@
 package com.st.client;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
+
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
+
+import com.st.common.Constants;
 
 public class CardBackView extends JPanel {
     private static BufferedImage cardBackImage;

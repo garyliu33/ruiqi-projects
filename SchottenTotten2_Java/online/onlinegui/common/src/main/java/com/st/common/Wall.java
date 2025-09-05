@@ -1,4 +1,4 @@
-package com.st.host;
+package com.st.common;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,17 +43,39 @@ public class Wall {
             }
             throw new AssertionError();
         }
+
+        public static Status fromProto(StatusProto proto) {
+            switch (proto) {
+                case StatusProto.BROKEN -> {
+                    return Status.BROKEN;
+                }
+                case StatusProto.DAMAGED -> {
+                    return Status.DAMAGED;
+                }
+                case StatusProto.INTACT -> {
+                    return Status.INTACT;
+                }
+            }
+            throw new AssertionError();
+        }
     }
 
-    public Wall(int wallIndex, int intactLength, int damagedLength, WallPattern intactPattern, WallPattern damagedPattern) {
+    public Wall(int wallIndex, int intactLength, int damagedLength, WallPattern intactPattern,
+            WallPattern damagedPattern) {
+        this(wallIndex, intactLength, intactLength, damagedLength, intactPattern, intactPattern,
+                damagedPattern, Status.INTACT);
+    }
+
+    public Wall(int wallIndex, int length, int intactLength, int damagedLength, WallPattern pattern,
+            WallPattern intactPattern, WallPattern damagedPattern, Status status) {
         this.wallIndex = wallIndex;
-        this.status = Status.INTACT;
+        this.status = status;
+        this.length = length;
         this.intactLength = intactLength;
         this.damagedLength = damagedLength;
+        this.pattern = pattern;
         this.intactPattern = intactPattern;
         this.damagedPattern = damagedPattern;
-        this.length = intactLength;
-        this.pattern = intactPattern;
 
         this.attackerCards = new ArrayList<>();
         this.defenderCards = new ArrayList<>();
@@ -91,7 +113,7 @@ public class Wall {
         return length;
     }
 
-    public int getIndex() {
+    public int getWallIndex() {
         return wallIndex;
     }
 
@@ -146,9 +168,11 @@ public class Wall {
 
     public Set<Card> declareControl(List<Card> remainingCards) {
         if (attackerCards.size() == length) {
-            int defenderStrength = getStrongestDefenderFormationStrength(defenderCards, remainingCards, length, Integer.MIN_VALUE);
+            int defenderStrength = getStrongestDefenderFormationStrength(defenderCards,
+                    remainingCards, length, Integer.MIN_VALUE);
             int attackerStrength = getStrength(attackerCards);
-            if ((attackerStrength > defenderStrength) || (attackerFinishedFirst && attackerStrength >= defenderStrength)) {
+            if ((attackerStrength > defenderStrength)
+                    || (attackerFinishedFirst && attackerStrength >= defenderStrength)) {
                 return damage();
             }
         }
@@ -170,14 +194,16 @@ public class Wall {
         return toDiscard;
     }
 
-    private int getStrongestDefenderFormationStrength(List<Card> currentFormation, List<Card> remainingCards, int length, int maxStrength) {
+    private int getStrongestDefenderFormationStrength(List<Card> currentFormation,
+            List<Card> remainingCards, int length, int maxStrength) {
         if (currentFormation.size() == length) {
             return Math.max(getStrength(currentFormation), maxStrength);
         }
         for (int i = 0; i < remainingCards.size(); i++) {
             Card card = remainingCards.remove(i);
             currentFormation.add(card);
-            maxStrength = Math.max(getStrongestDefenderFormationStrength(currentFormation, remainingCards, length, maxStrength), maxStrength);
+            maxStrength = Math.max(getStrongestDefenderFormationStrength(currentFormation,
+                    remainingCards, length, maxStrength), maxStrength);
             currentFormation.remove(card);
             remainingCards.add(i, card);
         }
@@ -210,7 +236,8 @@ public class Wall {
                 }
             }
             case WallPattern.EQUALS -> {
-                if (type == FormationType.COLOR_RUN || type == FormationType.COLOR || type == FormationType.RUN) {
+                if (type == FormationType.COLOR_RUN || type == FormationType.COLOR
+                        || type == FormationType.RUN) {
                     type = FormationType.SUM;
                 }
             }
@@ -233,7 +260,8 @@ public class Wall {
         }
 
         if (colors.size() == 1) {
-            return diffs.size() == 1 && diffs.contains(1) ? FormationType.COLOR_RUN : FormationType.COLOR;
+            return diffs.size() == 1 && diffs.contains(1) ? FormationType.COLOR_RUN
+                    : FormationType.COLOR;
         }
 
         if (diffs.size() == 1) {
@@ -266,5 +294,20 @@ public class Wall {
         }
         builder.setAttackerFinishedFirst(attackerFinishedFirst);
         return builder.build();
+    }
+
+    public static Wall fromProto(WallProto proto) {
+        Wall wall = new Wall(proto.getWallIndex(), proto.getLength(), proto.getIntactLength(),
+                proto.getDamagedLength(), WallPattern.fromProto(proto.getPattern()),
+                WallPattern.fromProto(proto.getIntactPattern()),
+                WallPattern.fromProto(proto.getDamagedPattern()),
+                Status.fromProto(proto.getStatus()));
+        for (int i = 0; i < proto.getAttackerCardsCount(); i++) {
+            wall.attackerCards.add(Card.fromProto(proto.getAttackerCards(i)));
+        }
+        for (int i = 0; i < proto.getDefenderCardsCount(); i++) {
+            wall.defenderCards.add(Card.fromProto(proto.getDefenderCards(i)));
+        }
+        return wall;
     }
 }
