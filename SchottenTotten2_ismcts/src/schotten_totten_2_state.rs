@@ -211,6 +211,14 @@ impl WallTile {
             _ => panic!("unknown status"),
         }
     }
+
+    fn get_required_cards(&self) -> usize {
+        if self.is_damaged {
+            self.damaged_required_cards
+        } else {
+            self.required_cards
+        }
+    }
 }
 
 impl fmt::Display for WallTile {
@@ -313,7 +321,7 @@ pub struct SchottenTotten2State {
 impl SchottenTotten2State {
     pub fn from_proto(proto: &com_st_proto::GameStateProto) -> Self {
         let mut discard = vec![];
-        for (key, card_list_proto) in &proto.discard {
+        for (_, card_list_proto) in &proto.discard {
             for card_proto in &card_list_proto.card_list {
                 discard.push(Card::from_proto(card_proto));
             }
@@ -323,11 +331,6 @@ impl SchottenTotten2State {
         for card_proto in &proto.client_hand {
             client_hand.push(Card::from_proto(card_proto));
         }
-        let (host_role, client_role) = if proto.is_client_attacker {
-            (Role::Defender, Role::Attacker)
-        } else {
-            (Role::Attacker, Role::Defender)
-        };
         let (attacker, defender) = if proto.is_client_attacker {
             (
                 Player {
@@ -409,11 +412,19 @@ impl SchottenTotten2State {
     fn check_attacker_control(&self, tile_index: usize) -> bool {
         let tile = &self.wall_tiles[tile_index];
 
-        assert!(tile.attacker_cards.len() <= tile.required_cards);
-        assert!(tile.defender_cards.len() <= tile.required_cards);
+        // println!(
+        //     "check: {}, {}, {}",
+        //     tile.attacker_cards.len(),
+        //     tile.defender_cards.len(),
+        //     tile.get_required_cards()
+        // );
+        assert!(tile.attacker_cards.len() <= tile.get_required_cards());
+        assert!(tile.defender_cards.len() <= tile.get_required_cards());
 
-        let attacker_formation_complete = tile.attacker_cards.len() == tile.required_cards;
-        let defender_formation_complete = tile.defender_cards.len() == tile.required_cards;
+        // println!("card count: {}, {}", tile.attacker_cards.len(), tile.defender_cards.len());
+
+        let attacker_formation_complete = tile.attacker_cards.len() == tile.get_required_cards();
+        let defender_formation_complete = tile.defender_cards.len() == tile.get_required_cards();
 
         if !attacker_formation_complete || !defender_formation_complete {
             return false;
@@ -512,7 +523,7 @@ impl SchottenTotten2State {
         if self.player_to_move_index == 1 {
             let mut has_empty_space = false;
             for wall in &self.wall_tiles {
-                if wall.defender_cards.len() < wall.required_cards {
+                if wall.defender_cards.len() < wall.get_required_cards() {
                     has_empty_space = true;
                     break;
                 }
@@ -637,7 +648,7 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
         ];
 
         SchottenTotten2State {
-            deck: siege_cards,
+            deck: vec![],
             discard_pile: Vec::new(),
             players: [p1, p2],
             wall_tiles,
@@ -663,16 +674,32 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
         let mut rng = rng();
         let mut new_state = self.clone();
 
-        // Unknown cards are the opponent's hand and the deck.
-        let mut unknown_cards: Vec<Card> = Vec::new();
-        let opponent_index = self.get_next_player(player_index);
+        // Unknown cards are all cards minus hand and tile card and discard.
+        let mut unknown_cards = vec![];
+        let colors = [
+            Color::Red,
+            Color::Blue,
+            Color::Green,
+            Color::Yellow,
+            Color::Gray,
+        ];
+        for &color in &colors {
+            for value in 0..=11 {
+                unknown_cards.push(Card { value, color });
+            }
+        }
+        unknown_cards.retain(|c| !self.players[player_index].hand.contains(c));
+        for wall in &self.wall_tiles {
+            unknown_cards.retain(|c| !wall.attacker_cards.contains(c));
+            unknown_cards.retain(|c| !wall.defender_cards.contains(c));
+        }
+        unknown_cards.retain(|c| !self.discard_pile.contains(c));
 
-        unknown_cards.extend_from_slice(&self.players[opponent_index].hand);
-        unknown_cards.extend_from_slice(&self.deck);
         unknown_cards.shuffle(&mut rng);
 
         // Deal out the unknown cards.
-        let opponent_hand_size = self.players[opponent_index].hand.len();
+        let opponent_index = self.get_next_player(player_index);
+        let opponent_hand_size = 6;
         new_state.players[opponent_index].hand =
             unknown_cards.drain(0..opponent_hand_size).collect();
         new_state.deck = unknown_cards;
@@ -717,18 +744,31 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
                         self.wall_tiles[*tile_index]
                             .attacker_cards
                             .push(card_to_play);
+                        // println!(
+                        //     "add attacker card: {}, {}",
+                        //     *tile_index,
+                        //     self.wall_tiles[*tile_index].attacker_cards.len()
+                        // );
                     } else {
                         self.wall_tiles[*tile_index]
                             .defender_cards
                             .push(card_to_play);
+                        // println!(
+                        //     "add defender card: {}, {}",
+                        //     *tile_index,
+                        //     self.wall_tiles[*tile_index].defender_cards.len()
+                        // );
                     }
                     if self.check_attacker_control(*tile_index) {
+                        // println!("attacker controlled {}", *tile_index);
                         if self.wall_tiles[*tile_index].is_damaged {
                             self.wall_tiles[*tile_index].is_damaged_twice = true;
                         } else {
                             self.attacker_damaged_tiles += 1;
                             self.wall_tiles[*tile_index].is_damaged = true;
                         }
+                        self.wall_tiles[*tile_index].attacker_cards.clear();
+                        self.wall_tiles[*tile_index].defender_cards.clear();
                     }
                 }
 
@@ -766,6 +806,7 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
     fn get_moves(&self) -> Vec<SchottenTotten2Move> {
         let mut moves = Vec::new();
         let current_player = &self.players[self.player_to_move_index];
+        // println!("play hand: {}", current_player.hand.len());
 
         // Play card moves
         for card in &current_player.hand {
@@ -776,7 +817,7 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
                 } else {
                     &tile.defender_cards
                 };
-                if player_cards.len() < tile.required_cards {
+                if player_cards.len() < tile.get_required_cards() {
                     moves.push(SchottenTotten2Move::PlayCard {
                         card: *card,
                         tile_index,
@@ -839,6 +880,7 @@ impl fmt::Display for SchottenTotten2State {
             write!(f, " Defender: {:?}", tile.defender_cards)?;
             writeln!(f, " Damaged: {}", tile.is_damaged)?;
         }
+        writeln!(f, "deck size: {}", self.deck.len())?;
         writeln!(f, "Player to move: {}", self.player_to_move())?;
         Ok(())
     }

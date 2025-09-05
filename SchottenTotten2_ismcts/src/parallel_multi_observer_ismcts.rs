@@ -53,6 +53,11 @@ where
         }
     }
 
+    // for r in &results {
+    //     print!("{}: {}, ", r.0, r.1);
+    // }
+    // // println!("");
+
     // Choose most visited child
     let best_child = results.iter().max_by_key(|c| c.1).unwrap();
 
@@ -81,6 +86,7 @@ fn multi_observer_ismcts_job<M: Clone + PartialEq + Display, S: GameState<M>>(
         let mut current_player = root_state.player_to_move();
         // Determinize
         let mut state = root_state.clone_and_randomize(current_player);
+        // println!("after randomized: {}", state);
 
         // Selection: descend tree while fully expanded & non-terminal
         while !state.get_moves().is_empty()
@@ -119,11 +125,14 @@ fn multi_observer_ismcts_job<M: Clone + PartialEq + Display, S: GameState<M>>(
             }
         }
 
+        // println!("-------------------- simulation");
         // Simulation: rollout until terminal
         while !state.get_moves().is_empty() {
+            // println!("has move");
             let m = state.get_moves().choose(&mut rng()).unwrap().clone();
             state.do_move(&m);
         }
+        // println!("end -------------------- simulation");
 
         assert!(state.get_result(state.player_to_move()).is_some());
 
@@ -135,6 +144,7 @@ fn multi_observer_ismcts_job<M: Clone + PartialEq + Display, S: GameState<M>>(
                 let player = n.borrow().player_just_moved;
                 if let Some(p) = player {
                     let result = state.get_result(p);
+                    // println!("state: {}, result: {}", state, result.unwrap());
                     n.borrow_mut().update(result.unwrap());
                 }
                 current = n.borrow().parent.as_ref().and_then(|weak| weak.upgrade());
