@@ -1,5 +1,3 @@
-extern crate core;
-
 mod board;
 mod game_controller;
 mod board_view;
@@ -7,9 +5,9 @@ mod cell_view;
 mod piece_color;
 mod display_constants;
 
-use std::io;
-use std::io::Write;
+use std::sync::RwLock;
 use macroquad::prelude::*;
+use crate::display_constants::{DisplayConstants, DISPLAY_CONSTANTS};
 use crate::game_controller::GameController;
 
 fn window_conf() -> Conf {
@@ -17,6 +15,7 @@ fn window_conf() -> Conf {
         window_title: "Chinese Checkers".to_owned(),
         window_width: 1000,
         window_height: 1000,
+        window_resizable: true,
         fullscreen: false,
         ..Default::default()
     }
@@ -31,8 +30,19 @@ enum AppState {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    let initial_constants = DisplayConstants::new(screen_width(), screen_height());
+    DISPLAY_CONSTANTS.set(RwLock::new(initial_constants)).unwrap();
+
     let mut state = AppState::ChooseNumPlayers;
     loop {
+        let mut update_constants = false;
+        let constants_screen_width = DISPLAY_CONSTANTS.get().unwrap().read().unwrap().screen_width;
+        if (screen_width() - constants_screen_width).abs() > 0.01 {
+            let mut writer = DISPLAY_CONSTANTS.get().unwrap().write().unwrap();
+            *writer = DisplayConstants::new(screen_width(), screen_height());
+            update_constants = true;
+        }
+
         clear_background(BLACK);
 
         match &mut state {
@@ -44,7 +54,7 @@ async fn main() {
                     prompt_text,
                     screen_width() / 2.0 - text_dims.width / 2.0,
                     screen_height() / 2.0 - 150.0,
-                    60.0,
+                    font_size,
                     WHITE,
                 );
 
@@ -95,6 +105,10 @@ async fn main() {
                 }
             }
             AppState::InGame { game_controller } => {
+                if update_constants {
+                    game_controller.update_cell_positions();
+                }
+
                 game_controller.display_board();
 
                 if let Some(winner) = game_controller.get_winner() {
@@ -112,24 +126,3 @@ async fn main() {
 }
 
 static VALID_PLAYER_NUMS: [usize; 4] = [2, 3, 4, 6];
-
-fn get_num_players() -> usize {
-    loop {
-        print!("Enter number of players: ");
-        io::stdout().flush().expect("failed to flush output");
-        let mut n = String::new();
-        io::stdin().read_line(&mut n).expect("failed to read line");
-
-        match n.trim().parse::<usize>() {
-            Ok(num) => {
-                if VALID_PLAYER_NUMS.contains(&num) {
-                    return num;
-                } else {
-                    println!("Invalid number of players");
-                }
-            } Err(_) => {
-                println!("Invalid input");
-            }
-        }
-    }
-}
