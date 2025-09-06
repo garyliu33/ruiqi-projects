@@ -6,6 +6,7 @@ mod schotten_totten_2_state;
 use parallel_multi_observer_ismcts::parallel_multi_observer_ismcts;
 use prost::Message;
 use prost::bytes::{BufMut, BytesMut};
+use std::env;
 use std::io;
 use std::io::prelude::*;
 use std::net::TcpStream;
@@ -66,7 +67,13 @@ fn read_delimited<T: Message + Default>(stream: &mut TcpStream) -> io::Result<T>
 }
 
 fn main() {
-    let mut stream = TcpStream::connect("127.0.0.1:12345").unwrap();
+    let args: Vec<String> = env::args().collect();
+    let ip = if args.len() <= 1 {
+        "localhost".to_string()
+    } else {
+        args[1].clone()
+    };
+    let mut stream = TcpStream::connect(ip + ":12345").unwrap();
 
     loop {
         let game_state_proto = read_delimited::<com_st_proto::GameStateProto>(&mut stream).unwrap();
@@ -75,7 +82,7 @@ fn main() {
         if !schotten_totten_2_state.is_client_turn {
             continue;
         }
-        let m = parallel_multi_observer_ismcts(&schotten_totten_2_state, 50000, 10);
+        let m = parallel_multi_observer_ismcts(&schotten_totten_2_state, 100000, num_cpus::get());
         let move_proto = m.to_proto();
         write_delimited(&mut stream, &move_proto).unwrap();
     }
