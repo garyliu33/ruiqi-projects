@@ -1,311 +1,13 @@
 use crate::game_state::{self, GameState};
+use crate::schotten_totten_2::card::{Card, Color};
+use crate::schotten_totten_2::com_st_proto;
+use crate::schotten_totten_2::r#move::SchottenTotten2Move;
+use crate::schotten_totten_2::player::Player;
+use crate::schotten_totten_2::types::{FormationType, Role, WinningType};
+use crate::schotten_totten_2::wall_tile::{WallPattern, WallTile};
 use rand::rng;
 use rand::seq::SliceRandom;
 use std::fmt;
-
-pub mod com_st_proto {
-    include!(concat!(env!("OUT_DIR"), "/com.st.proto.rs"));
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum WinningType {
-    DamagedTwice,
-    DamagedFourTiles,
-    EmptyDeck,
-    NoSpace,
-    None,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Color {
-    Red,
-    Blue,
-    Yellow,
-    Green,
-    Gray,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Card {
-    pub value: u8,
-    pub color: Color,
-}
-
-impl Card {
-    fn to_proto(&self) -> com_st_proto::CardProto {
-        let color = match self.color {
-            Color::Red => com_st_proto::ColorProto::Red as i32,
-            Color::Blue => com_st_proto::ColorProto::Blue as i32,
-            Color::Yellow => com_st_proto::ColorProto::Yellow as i32,
-            Color::Green => com_st_proto::ColorProto::Green as i32,
-            Color::Gray => com_st_proto::ColorProto::Gray as i32,
-        };
-        com_st_proto::CardProto {
-            color: Some(color),
-            value: Some(self.value as i32),
-        }
-    }
-
-    fn from_proto(proto: &com_st_proto::CardProto) -> Card {
-        if let (Some(color), Some(value)) = (proto.color, proto.value) {
-            match com_st_proto::ColorProto::try_from(color) {
-                Ok(com_st_proto::ColorProto::Red) => {
-                    return Card {
-                        color: Color::Red,
-                        value: value as u8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Blue) => {
-                    return Card {
-                        color: Color::Blue,
-                        value: value as u8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Yellow) => {
-                    return Card {
-                        color: Color::Yellow,
-                        value: value as u8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Green) => {
-                    return Card {
-                        color: Color::Green,
-                        value: value as u8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Gray) => {
-                    return Card {
-                        color: Color::Gray,
-                        value: value as u8,
-                    };
-                }
-                _ => panic!("Unknown color"),
-            }
-        }
-        panic!("missing field in CardProto");
-    }
-}
-
-impl fmt::Display for Card {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({}, {:?})", self.value, self.color)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
-pub enum FormationType {
-    Sum,
-    Run,
-    Color,
-    SameStrength,
-    ColorRun,
-}
-
-impl FormationType {
-    // Logic to evaluate a formation based on the rules.
-    pub fn evaluate_formation(cards: &[Card]) -> (Option<FormationType>, u32) {
-        if cards.len() < 2 {
-            return (None, 0);
-        }
-
-        let sum: u32 = cards.iter().map(|c| c.value as u32).sum();
-
-        let first_color = cards[0].color;
-        let same_color = cards.iter().all(|c| c.color == first_color);
-
-        let first_strength = cards[0].value;
-        let same_strength = cards.iter().all(|c| c.value == first_strength);
-
-        let mut sorted_cards = cards.to_vec();
-        sorted_cards.sort_by_key(|c| c.value);
-        let mut is_run = true;
-        for i in 0..sorted_cards.len() - 1 {
-            if sorted_cards[i].value + 1 != sorted_cards[i + 1].value {
-                is_run = false;
-                break;
-            }
-        }
-
-        if is_run && same_color {
-            return (Some(FormationType::ColorRun), sum);
-        }
-        if same_strength {
-            return (Some(FormationType::SameStrength), sum);
-        }
-        if same_color {
-            return (Some(FormationType::Color), sum);
-        }
-        if is_run {
-            return (Some(FormationType::Run), sum);
-        }
-        return (Some(FormationType::Sum), sum);
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
-pub enum WallPattern {
-    Color,
-    Run,
-    Equal,
-    Plus,
-    Minus,
-    None,
-}
-
-impl WallPattern {
-    fn from_proto(pattern: i32) -> WallPattern {
-        match com_st_proto::WallPatternProto::try_from(pattern) {
-            Ok(com_st_proto::WallPatternProto::Color) => WallPattern::Color,
-            Ok(com_st_proto::WallPatternProto::Run) => WallPattern::Run,
-            Ok(com_st_proto::WallPatternProto::Equals) => WallPattern::Equal,
-            Ok(com_st_proto::WallPatternProto::Plus) => WallPattern::Plus,
-            Ok(com_st_proto::WallPatternProto::Minus) => WallPattern::Minus,
-            Ok(com_st_proto::WallPatternProto::NonePattern) => WallPattern::None,
-            _ => panic!("unknown wall patern"),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct WallTile {
-    pub id: usize,
-    pub required_cards: usize,
-    pub wall_pattern: WallPattern,
-    pub damaged_required_cards: usize,
-    pub damaged_wall_pattern: WallPattern,
-    pub is_damaged: bool,
-    pub is_damaged_twice: bool,
-    pub attacker_cards: Vec<Card>,
-    pub defender_cards: Vec<Card>,
-}
-
-impl WallTile {
-    fn from_proto(proto: &com_st_proto::WallProto) -> WallTile {
-        let mut attacker_cards = vec![];
-        for card_proto in &proto.attacker_cards {
-            attacker_cards.push(Card::from_proto(card_proto));
-        }
-        let mut defender_cards = vec![];
-        for card_proto in &proto.defender_cards {
-            defender_cards.push(Card::from_proto(card_proto));
-        }
-
-        WallTile {
-            id: proto.wall_index.unwrap() as usize,
-            required_cards: proto.intact_length.unwrap() as usize,
-            wall_pattern: WallPattern::from_proto(proto.intact_pattern.unwrap()),
-            damaged_required_cards: proto.damaged_length.unwrap() as usize,
-            damaged_wall_pattern: WallPattern::from_proto(proto.damaged_pattern.unwrap()),
-            is_damaged: WallTile::get_status(proto.status.unwrap()).0,
-            is_damaged_twice: WallTile::get_status(proto.status.unwrap()).1,
-            attacker_cards: attacker_cards,
-            defender_cards: defender_cards,
-        }
-    }
-
-    fn get_status(status: i32) -> (bool, bool) {
-        match com_st_proto::StatusProto::try_from(status) {
-            Ok(com_st_proto::StatusProto::Intact) => (false, false),
-            Ok(com_st_proto::StatusProto::Damaged) => (true, false),
-            Ok(com_st_proto::StatusProto::Broken) => (true, true),
-            _ => panic!("unknown status"),
-        }
-    }
-
-    fn get_required_cards(&self) -> usize {
-        if self.is_damaged {
-            self.damaged_required_cards
-        } else {
-            self.required_cards
-        }
-    }
-}
-
-impl fmt::Display for WallTile {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Tile {}: Pattern: {:?}, Attacker: {:?}, Defender: {:?}, isDamaged: {}",
-            self.id,
-            if self.is_damaged {
-                self.damaged_wall_pattern
-            } else {
-                self.wall_pattern
-            },
-            self.attacker_cards,
-            self.defender_cards,
-            self.is_damaged,
-        )
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Role {
-    Attacker,
-    Defender,
-}
-
-#[derive(Debug, Clone)]
-pub struct Player {
-    pub hand: Vec<Card>,
-    pub role: Role,
-    pub oil_cauldrons: u8,
-}
-
-impl fmt::Display for Player {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}: {} cards in hand", self.role, self.hand.len())
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum SchottenTotten2Move {
-    PlayCard { card: Card, tile_index: usize },
-    Retreat { tile_index: usize },
-    ThrowOilCauldron { tile_index: usize },
-}
-
-impl SchottenTotten2Move {
-    pub fn to_proto(&self) -> com_st_proto::ClientMoveProto {
-        let (card_proto, tile_index) = match self {
-            Self::PlayCard { card, tile_index } => (card.to_proto(), tile_index),
-            Self::Retreat { tile_index } => (
-                com_st_proto::CardProto {
-                    color: Some(com_st_proto::ColorProto::Action as i32),
-                    value: Some(-1),
-                },
-                tile_index,
-            ),
-            Self::ThrowOilCauldron { tile_index } => (
-                com_st_proto::CardProto {
-                    color: Some(com_st_proto::ColorProto::Action as i32),
-                    value: Some(-2),
-                },
-                tile_index,
-            ),
-        };
-        com_st_proto::ClientMoveProto {
-            card: Some(card_proto),
-            wall_index: Some(*tile_index as i32),
-        }
-    }
-}
-
-impl fmt::Display for SchottenTotten2Move {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            SchottenTotten2Move::PlayCard { card, tile_index } => {
-                write!(f, "Play card {} on tile {}", card, tile_index)
-            }
-            SchottenTotten2Move::Retreat { tile_index } => {
-                write!(f, "Retreat from tile {}", tile_index)
-            }
-            SchottenTotten2Move::ThrowOilCauldron { tile_index } => {
-                write!(f, "Throw oil cauldron on tile {}", tile_index)
-            }
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct SchottenTotten2State {
@@ -418,13 +120,13 @@ impl SchottenTotten2State {
         //     tile.defender_cards.len(),
         //     tile.get_required_cards()
         // );
-        assert!(tile.attacker_cards.len() <= tile.get_required_cards());
-        assert!(tile.defender_cards.len() <= tile.get_required_cards());
+        assert!(tile.attacker_cards.len() <= tile.get_length());
+        assert!(tile.defender_cards.len() <= tile.get_length());
 
         // println!("card count: {}, {}", tile.attacker_cards.len(), tile.defender_cards.len());
 
-        let attacker_formation_complete = tile.attacker_cards.len() == tile.get_required_cards();
-        let defender_formation_complete = tile.defender_cards.len() == tile.get_required_cards();
+        let attacker_formation_complete = tile.attacker_cards.len() == tile.get_length();
+        let defender_formation_complete = tile.defender_cards.len() == tile.get_length();
 
         if !attacker_formation_complete || !defender_formation_complete {
             return false;
@@ -439,7 +141,7 @@ impl SchottenTotten2State {
         let wall_pattern = if tile.is_damaged {
             &tile.damaged_wall_pattern
         } else {
-            &tile.wall_pattern
+            &tile.intact_wall_pattern
         };
         let attacker_formation = attacker_eval.0.as_ref().unwrap();
         let defender_formation = defender_eval.0.as_ref().unwrap();
@@ -523,7 +225,7 @@ impl SchottenTotten2State {
         if self.player_to_move_index == 1 {
             let mut has_empty_space = false;
             for wall in &self.wall_tiles {
-                if wall.defender_cards.len() < wall.get_required_cards() {
+                if wall.defender_cards.len() < wall.get_length() {
                     has_empty_space = true;
                     break;
                 }
@@ -570,9 +272,9 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
         let wall_tiles = vec![
             WallTile {
                 id: 0,
-                required_cards: 3,
-                wall_pattern: WallPattern::Plus,
-                damaged_required_cards: 3,
+                intact_length: 3,
+                intact_wall_pattern: WallPattern::Plus,
+                damaged_length: 3,
                 damaged_wall_pattern: WallPattern::Run,
                 is_damaged: false,
                 is_damaged_twice: false,
@@ -581,9 +283,9 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
             },
             WallTile {
                 id: 1,
-                required_cards: 4,
-                wall_pattern: WallPattern::None,
-                damaged_required_cards: 2,
+                intact_length: 4,
+                intact_wall_pattern: WallPattern::None,
+                damaged_length: 2,
                 damaged_wall_pattern: WallPattern::Equal,
                 is_damaged: false,
                 is_damaged_twice: false,
@@ -592,9 +294,9 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
             },
             WallTile {
                 id: 2,
-                required_cards: 3,
-                wall_pattern: WallPattern::None,
-                damaged_required_cards: 3,
+                intact_length: 3,
+                intact_wall_pattern: WallPattern::None,
+                damaged_length: 3,
                 damaged_wall_pattern: WallPattern::Color,
                 is_damaged: false,
                 is_damaged_twice: false,
@@ -603,9 +305,9 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
             },
             WallTile {
                 id: 3,
-                required_cards: 2,
-                wall_pattern: WallPattern::None,
-                damaged_required_cards: 4,
+                intact_length: 2,
+                intact_wall_pattern: WallPattern::None,
+                damaged_length: 4,
                 damaged_wall_pattern: WallPattern::Minus,
                 is_damaged: false,
                 is_damaged_twice: false,
@@ -614,9 +316,9 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
             },
             WallTile {
                 id: 4,
-                required_cards: 3,
-                wall_pattern: WallPattern::None,
-                damaged_required_cards: 3,
+                intact_length: 3,
+                intact_wall_pattern: WallPattern::None,
+                damaged_length: 3,
                 damaged_wall_pattern: WallPattern::Color,
                 is_damaged: false,
                 is_damaged_twice: false,
@@ -625,9 +327,9 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
             },
             WallTile {
                 id: 5,
-                required_cards: 4,
-                wall_pattern: WallPattern::None,
-                damaged_required_cards: 2,
+                intact_length: 4,
+                intact_wall_pattern: WallPattern::None,
+                damaged_length: 2,
                 damaged_wall_pattern: WallPattern::Equal,
                 is_damaged: false,
                 is_damaged_twice: false,
@@ -636,9 +338,9 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
             },
             WallTile {
                 id: 6,
-                required_cards: 3,
-                wall_pattern: WallPattern::Minus,
-                damaged_required_cards: 3,
+                intact_length: 3,
+                intact_wall_pattern: WallPattern::Minus,
+                damaged_length: 3,
                 damaged_wall_pattern: WallPattern::Run,
                 is_damaged: false,
                 is_damaged_twice: false,
@@ -817,7 +519,7 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
                 } else {
                     &tile.defender_cards
                 };
-                if player_cards.len() < tile.get_required_cards() {
+                if player_cards.len() < tile.get_length() {
                     moves.push(SchottenTotten2Move::PlayCard {
                         card: *card,
                         tile_index,
@@ -1004,7 +706,7 @@ mod tests {
 
         // Ensure the wall pattern is one where attacker can win
         state.wall_tiles[tile_index].damaged_wall_pattern = WallPattern::Plus;
-        state.wall_tiles[tile_index].required_cards = 3;
+        state.wall_tiles[tile_index].intact_length = 3;
 
         // Player to move must be the attacker
         state.player_to_move_index = 0;
@@ -1053,8 +755,8 @@ mod tests {
                 color: Color::Blue,
             },
         ];
-        state.wall_tiles[tile_index].wall_pattern = WallPattern::Plus;
-        state.wall_tiles[tile_index].required_cards = 2;
+        state.wall_tiles[tile_index].intact_wall_pattern = WallPattern::Plus;
+        state.wall_tiles[tile_index].intact_length = 2;
 
         let play_move = SchottenTotten2Move::PlayCard {
             card: card_to_play,
@@ -1215,9 +917,9 @@ mod tests {
 
         state.wall_tiles.push(WallTile {
             id: 0,
-            required_cards: 3,
-            wall_pattern: WallPattern::Plus,
-            damaged_required_cards: 3,
+            intact_length: 3,
+            intact_wall_pattern: WallPattern::Plus,
+            damaged_length: 3,
             damaged_wall_pattern: WallPattern::Run,
             is_damaged: true, // This marks the tile as "damaged twice"
             is_damaged_twice: true,
@@ -1244,7 +946,7 @@ mod tests {
         let mut state = setup_game_state();
         state.player_to_move_index = 1; // Defender's turn
         for tile in &mut state.wall_tiles {
-            for _ in 0..tile.required_cards {
+            for _ in 0..tile.intact_length {
                 tile.defender_cards.push(Card {
                     value: 1,
                     color: Color::Red,
@@ -1351,7 +1053,7 @@ mod tests {
         let tile = &mut state.wall_tiles[tile_index];
 
         // Fill the tile with the maximum number of cards for the attacker
-        for _ in 0..tile.required_cards {
+        for _ in 0..tile.intact_length {
             tile.attacker_cards.push(Card {
                 value: 1,
                 color: Color::Red,
@@ -1376,144 +1078,6 @@ mod tests {
             .filter(|m| matches!(m, SchottenTotten2Move::Retreat { .. }))
             .count();
         assert_eq!(retreat_moves, 1);
-    }
-
-    // --- FormationType::evaluate_formation() Tests ---
-
-    #[test]
-    fn test_evaluate_formation_less_than_two_cards() {
-        let cards = vec![Card {
-            value: 1,
-            color: Color::Red,
-        }];
-        assert_eq!(FormationType::evaluate_formation(&cards), (None, 0));
-    }
-
-    #[test]
-    fn test_evaluate_formation_color_run() {
-        let cards = vec![
-            Card {
-                value: 3,
-                color: Color::Red,
-            },
-            Card {
-                value: 4,
-                color: Color::Red,
-            },
-            Card {
-                value: 5,
-                color: Color::Red,
-            },
-        ];
-        let (formation_type, sum) = FormationType::evaluate_formation(&cards);
-        assert_eq!(formation_type, Some(FormationType::ColorRun));
-        assert_eq!(sum, 12);
-    }
-
-    #[test]
-    fn test_evaluate_formation_same_strength() {
-        let cards = vec![
-            Card {
-                value: 7,
-                color: Color::Red,
-            },
-            Card {
-                value: 7,
-                color: Color::Blue,
-            },
-            Card {
-                value: 7,
-                color: Color::Green,
-            },
-        ];
-        let (formation_type, sum) = FormationType::evaluate_formation(&cards);
-        assert_eq!(formation_type, Some(FormationType::SameStrength));
-        assert_eq!(sum, 21);
-    }
-
-    #[test]
-    fn test_evaluate_formation_color() {
-        let cards = vec![
-            Card {
-                value: 2,
-                color: Color::Yellow,
-            },
-            Card {
-                value: 8,
-                color: Color::Yellow,
-            },
-            Card {
-                value: 10,
-                color: Color::Yellow,
-            },
-        ];
-        let (formation_type, sum) = FormationType::evaluate_formation(&cards);
-        assert_eq!(formation_type, Some(FormationType::Color));
-        assert_eq!(sum, 20);
-    }
-
-    #[test]
-    fn test_evaluate_formation_run() {
-        let cards = vec![
-            Card {
-                value: 9,
-                color: Color::Green,
-            },
-            Card {
-                value: 10,
-                color: Color::Red,
-            },
-            Card {
-                value: 11,
-                color: Color::Blue,
-            },
-        ];
-        let (formation_type, sum) = FormationType::evaluate_formation(&cards);
-        assert_eq!(formation_type, Some(FormationType::Run));
-        assert_eq!(sum, 30);
-    }
-
-    #[test]
-    fn test_evaluate_formation_sum() {
-        let cards = vec![
-            Card {
-                value: 1,
-                color: Color::Green,
-            },
-            Card {
-                value: 5,
-                color: Color::Red,
-            },
-            Card {
-                value: 9,
-                color: Color::Blue,
-            },
-        ];
-        let (formation_type, sum) = FormationType::evaluate_formation(&cards);
-        assert_eq!(formation_type, Some(FormationType::Sum));
-        assert_eq!(sum, 15);
-    }
-
-    #[test]
-    fn test_evaluate_formation_unshuffled_order_does_not_matter() {
-        // Test that the order of cards doesn't change the outcome for run or color run.
-        let cards = vec![
-            Card {
-                value: 5,
-                color: Color::Red,
-            },
-            Card {
-                value: 3,
-                color: Color::Red,
-            },
-            Card {
-                value: 4,
-                color: Color::Red,
-            },
-        ];
-        let (formation_type, sum) = FormationType::evaluate_formation(&cards);
-        assert_eq!(formation_type, Some(FormationType::ColorRun));
-        assert_eq!(sum, 12);
     }
 
     // --- check_attacker_control() Tests ---
@@ -1555,8 +1119,8 @@ mod tests {
             },
         ];
 
-        state.wall_tiles[tile_index].wall_pattern = WallPattern::Plus;
-        state.wall_tiles[tile_index].required_cards = 3;
+        state.wall_tiles[tile_index].intact_wall_pattern = WallPattern::Plus;
+        state.wall_tiles[tile_index].intact_length = 3;
 
         let result = state.check_attacker_control(tile_index);
         assert!(result);
@@ -1599,8 +1163,8 @@ mod tests {
             },
         ];
 
-        state.wall_tiles[tile_index].wall_pattern = WallPattern::Plus;
-        state.wall_tiles[tile_index].required_cards = 3;
+        state.wall_tiles[tile_index].intact_wall_pattern = WallPattern::Plus;
+        state.wall_tiles[tile_index].intact_length = 3;
 
         let result = state.check_attacker_control(tile_index);
         assert!(!result);
@@ -1641,8 +1205,8 @@ mod tests {
             },
         ];
 
-        state.wall_tiles[tile_index].wall_pattern = WallPattern::Plus;
-        state.wall_tiles[tile_index].required_cards = 3;
+        state.wall_tiles[tile_index].intact_wall_pattern = WallPattern::Plus;
+        state.wall_tiles[tile_index].intact_length = 3;
 
         let result = state.check_attacker_control(tile_index);
         assert!(!result); // Defender wins in a tie
@@ -1685,8 +1249,8 @@ mod tests {
             },
         ];
 
-        state.wall_tiles[tile_index].wall_pattern = WallPattern::Run;
-        state.wall_tiles[tile_index].required_cards = 3;
+        state.wall_tiles[tile_index].intact_wall_pattern = WallPattern::Run;
+        state.wall_tiles[tile_index].intact_length = 3;
 
         let result = state.check_attacker_control(tile_index);
         assert!(result);
@@ -1729,8 +1293,8 @@ mod tests {
             },
         ];
 
-        state.wall_tiles[tile_index].wall_pattern = WallPattern::Run;
-        state.wall_tiles[tile_index].required_cards = 3;
+        state.wall_tiles[tile_index].intact_wall_pattern = WallPattern::Run;
+        state.wall_tiles[tile_index].intact_length = 3;
 
         let result = state.check_attacker_control(tile_index);
         assert!(!result);
