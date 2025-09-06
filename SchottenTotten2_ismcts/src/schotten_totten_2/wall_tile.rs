@@ -57,6 +57,14 @@ impl WallTile {
         }
     }
 
+    pub fn from_proto_array(proto_array: &[com_st_proto::WallProto]) -> Vec<WallTile> {
+        let mut wall_tiles = vec![];
+        for wall_proto in proto_array {
+            wall_tiles.push(WallTile::from_proto(wall_proto));
+        }
+        wall_tiles
+    }
+
     /// returns (is_damaged, is_damaged_twice)
     fn get_status(status: i32) -> (bool, bool) {
         match com_st_proto::StatusProto::try_from(status) {
@@ -202,5 +210,16 @@ mod tests {
     #[should_panic(expected = "unknown wall patern")]
     fn test_wall_pattern_from_proto_unknown_panic() {
         WallPattern::from_proto(99);
+    }
+    
+    #[test]
+    fn test_from_proto_array() {
+        let mut proto_array = vec![];
+        proto_array.push(create_test_wall_proto());
+        proto_array.push(create_test_wall_proto());
+        proto_array.push(create_test_wall_proto());
+
+        let wall_tiles = WallTile::from_proto_array(&proto_array);
+        assert_eq!(wall_tiles.len(), 3);
     }
 }

@@ -3,8 +3,6 @@
 use std::fmt::Display;
 
 pub trait GameState<M: Clone + PartialEq + Display>: Clone + Display {
-    fn new(num_players: usize) -> Self;
-
     /// The current player to move.
     fn player_to_move(&self) -> usize;
 
