@@ -28,4 +28,6 @@ message GameStateProto {
     optional bool is_client_attacker = 9;
     WinnerProto winner = 10;
     optional CardProto last_played_card = 11;
+    repeated CardProto attacker_hand = 12;
+    repeated CardProto defender_hand = 13;
 }
