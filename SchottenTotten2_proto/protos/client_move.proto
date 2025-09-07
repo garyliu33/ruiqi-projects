@@ -5,6 +5,6 @@ package com.st.proto;
 import "card.proto";
 
 message ClientMoveProto {
-    optional CardProto card = 1;
-    optional int32 wall_index = 2;
+    CardProto card = 1;
+    int32 wall_index = 2;
 }

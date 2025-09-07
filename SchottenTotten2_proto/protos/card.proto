@@ -12,6 +12,6 @@ enum ColorProto {
 }
 
 message CardProto {
-    optional ColorProto color = 1;
-    optional int32 value = 2;
+    ColorProto color = 1;
+    int32 value = 2;
 }

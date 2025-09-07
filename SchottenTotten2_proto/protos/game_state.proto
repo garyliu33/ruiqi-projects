@@ -19,13 +19,13 @@ message GameStateProto {
     repeated CardProto host_hand = 1;
     repeated CardProto client_hand = 2;
     repeated WallProto walls = 3;
-    optional int32 deck_size = 4;
+    int32 deck_size = 4;
     // ColorProto to card list mapping.
     map<int32, CardListProto> discard = 5;
-    bool is_client_turn = 6;
+    optional bool is_client_turn = 6;
     int32 cauldron_count = 7;
     bool used_cauldron = 8;
-    bool is_client_attacker = 9;
+    optional bool is_client_attacker = 9;
     WinnerProto winner = 10;
-    CardProto last_played_card = 11;
+    optional CardProto last_played_card = 11;
 }

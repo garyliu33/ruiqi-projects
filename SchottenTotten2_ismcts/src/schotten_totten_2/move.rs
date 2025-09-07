@@ -16,22 +16,22 @@ impl SchottenTotten2Move {
             Self::PlayCard { card, tile_index } => (card.to_proto(), tile_index),
             Self::Retreat { tile_index } => (
                 com_st_proto::CardProto {
-                    color: Some(com_st_proto::ColorProto::Action.into()),
-                    value: Some(-1),
+                    color: com_st_proto::ColorProto::Action.into(),
+                    value: -1,
                 },
                 tile_index,
             ),
             Self::ThrowOilCauldron { tile_index } => (
                 com_st_proto::CardProto {
-                    color: Some(com_st_proto::ColorProto::Action.into()),
-                    value: Some(-2),
+                    color: com_st_proto::ColorProto::Action.into(),
+                    value: -2,
                 },
                 tile_index,
             ),
         };
         com_st_proto::ClientMoveProto {
             card: Some(card_proto),
-            wall_index: Some(*tile_index as i32),
+            wall_index: *tile_index as i32,
         }
     }
 }
