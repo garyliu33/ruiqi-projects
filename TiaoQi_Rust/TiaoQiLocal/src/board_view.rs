@@ -33,18 +33,19 @@ impl BoardView {
     }
 
     pub fn draw(&self) {
-        // for i in 0..6 {
-        //     self.draw_triangle(i);
-        // }
+        for i in 0..6 {
+            self.draw_target_marker(i);
+        }
 
         for cell in &self.cells {
             cell.draw();
         }
     }
 
-    fn draw_triangle(&self, i: usize) {
+    fn draw_target_marker(&self, i: usize) {
         let scale = DISPLAY_CONSTANTS.get().unwrap().read().unwrap().cell_location_scale;
-        let color = PieceColor::get_color(i).get_display_color();
+        let mut color = PieceColor::get_color(i).get_display_color();
+        color.a = 0.8;
         let center = vec2(screen_width() / 2.0, screen_height() / 2.0);
         let [c1, c2, c3] = TRIANGLE_CORNERS[(i + 3) % 6];
         draw_triangle(center + c1 * scale,
