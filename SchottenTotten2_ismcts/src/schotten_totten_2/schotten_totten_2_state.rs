@@ -32,7 +32,7 @@ impl SchottenTotten2State {
             }
         }
         let client_hand = Card::from_proto_array(&proto.client_hand);
-        let (attacker, defender) = if proto.is_client_attacker {
+        let (attacker, defender) = if proto.is_client_attacker.unwrap() {
             (
                 Player {
                     hand: client_hand,
@@ -59,7 +59,10 @@ impl SchottenTotten2State {
                 },
             )
         };
-        let player_to_move = match (proto.is_client_turn, proto.is_client_attacker) {
+        let player_to_move = match (
+            proto.is_client_turn.unwrap(),
+            proto.is_client_attacker.unwrap(),
+        ) {
             (true, true) => 0,
             (true, false) => 1,
             (false, true) => 1,
@@ -74,7 +77,7 @@ impl SchottenTotten2State {
             wall_tiles: wall_tiles,
             player_to_move_index: player_to_move,
             attacker_damaged_tiles: damaged_tile_count,
-            is_client_turn: proto.is_client_turn,
+            is_client_turn: proto.is_client_turn.unwrap(),
             last_played_card: proto
                 .last_played_card
                 .map(|card_proto| Card::from_proto(&card_proto)),

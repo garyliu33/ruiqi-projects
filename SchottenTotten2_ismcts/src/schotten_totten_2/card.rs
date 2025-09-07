@@ -29,54 +29,51 @@ impl Card {
             Color::ACTION => com_st_proto::ColorProto::Action.into(),
         };
         com_st_proto::CardProto {
-            color: Some(color),
-            value: Some(self.value.into()),
+            color: color,
+            value: self.value.into(),
         }
     }
 
     pub fn from_proto(proto: &com_st_proto::CardProto) -> Card {
-        if let (Some(color), Some(value)) = (proto.color, proto.value) {
-            match com_st_proto::ColorProto::try_from(color) {
-                Ok(com_st_proto::ColorProto::Red) => {
-                    return Card {
-                        color: Color::Red,
-                        value: value as i8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Blue) => {
-                    return Card {
-                        color: Color::Blue,
-                        value: value as i8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Yellow) => {
-                    return Card {
-                        color: Color::Yellow,
-                        value: value as i8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Green) => {
-                    return Card {
-                        color: Color::Green,
-                        value: value as i8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Gray) => {
-                    return Card {
-                        color: Color::Gray,
-                        value: value as i8,
-                    };
-                }
-                Ok(com_st_proto::ColorProto::Action) => {
-                    return Card {
-                        color: Color::ACTION,
-                        value: value as i8,
-                    };
-                }
-                _ => panic!("Unknown color"),
+        match com_st_proto::ColorProto::try_from(proto.color) {
+            Ok(com_st_proto::ColorProto::Red) => {
+                return Card {
+                    color: Color::Red,
+                    value: proto.value as i8,
+                };
             }
+            Ok(com_st_proto::ColorProto::Blue) => {
+                return Card {
+                    color: Color::Blue,
+                    value: proto.value as i8,
+                };
+            }
+            Ok(com_st_proto::ColorProto::Yellow) => {
+                return Card {
+                    color: Color::Yellow,
+                    value: proto.value as i8,
+                };
+            }
+            Ok(com_st_proto::ColorProto::Green) => {
+                return Card {
+                    color: Color::Green,
+                    value: proto.value as i8,
+                };
+            }
+            Ok(com_st_proto::ColorProto::Gray) => {
+                return Card {
+                    color: Color::Gray,
+                    value: proto.value as i8,
+                };
+            }
+            Ok(com_st_proto::ColorProto::Action) => {
+                return Card {
+                    color: Color::ACTION,
+                    value: proto.value as i8,
+                };
+            }
+            _ => panic!("Unknown color"),
         }
-        panic!("missing field in CardProto");
     }
 
     pub fn from_proto_array(proto_array: &[CardProto]) -> Vec<Card> {
@@ -156,9 +153,27 @@ mod tests {
     #[test]
     fn test_card_from_proto_array() {
         let mut proto_array = Vec::new();
-        proto_array.push(Card{value: 11, color: Color::Blue}.to_proto());
-        proto_array.push(Card{value: 8, color: Color::Yellow}.to_proto());
-        proto_array.push(Card{value: 0, color: Color::Red}.to_proto());
+        proto_array.push(
+            Card {
+                value: 11,
+                color: Color::Blue,
+            }
+            .to_proto(),
+        );
+        proto_array.push(
+            Card {
+                value: 8,
+                color: Color::Yellow,
+            }
+            .to_proto(),
+        );
+        proto_array.push(
+            Card {
+                value: 0,
+                color: Color::Red,
+            }
+            .to_proto(),
+        );
 
         let cards = Card::from_proto_array(&proto_array);
         assert_eq!(cards.len(), 3);

@@ -42,14 +42,14 @@ pub struct WallTile {
 
 impl WallTile {
     pub fn from_proto(proto: &com_st_proto::WallProto) -> WallTile {
-        let (is_damaged, is_damaged_twice) = WallTile::get_status(proto.status.unwrap());
+        let (is_damaged, is_damaged_twice) = WallTile::get_status(proto.status);
 
         WallTile {
-            id: proto.wall_index.unwrap() as usize,
-            intact_length: proto.intact_length.unwrap() as usize,
-            intact_wall_pattern: WallPattern::from_proto(proto.intact_pattern.unwrap()),
-            damaged_length: proto.damaged_length.unwrap() as usize,
-            damaged_wall_pattern: WallPattern::from_proto(proto.damaged_pattern.unwrap()),
+            id: proto.wall_index as usize,
+            intact_length: proto.intact_length as usize,
+            intact_wall_pattern: WallPattern::from_proto(proto.intact_pattern),
+            damaged_length: proto.damaged_length as usize,
+            damaged_wall_pattern: WallPattern::from_proto(proto.damaged_pattern),
             is_damaged: is_damaged,
             is_damaged_twice: is_damaged_twice,
             attacker_cards: Card::from_proto_array(&proto.attacker_cards),
@@ -110,22 +110,32 @@ impl fmt::Display for WallTile {
 mod tests {
     use super::*;
     use crate::schotten_totten_2::card::Color;
-    use crate::schotten_totten_2::com_st_proto::{self, CardProto, ColorProto};
     use crate::schotten_totten_2::com_st_proto::StatusProto;
     use crate::schotten_totten_2::com_st_proto::WallPatternProto;
+    use crate::schotten_totten_2::com_st_proto::{self, CardProto, ColorProto};
 
     fn create_test_wall_proto() -> com_st_proto::WallProto {
         com_st_proto::WallProto {
-            wall_index: Some(1),
+            wall_index: 1,
             length: None,
-            intact_length: Some(5),
+            intact_length: 5,
             pattern: None,
-            intact_pattern: Some(WallPatternProto::Color.into()),
-            damaged_length: Some(3),
-            damaged_pattern: Some(WallPatternProto::Run.into()),
-            status: Some(StatusProto::Intact.into()),
-            attacker_cards: vec![(CardProto {color: Some(ColorProto::Blue.into()), value: Some(8)})],
-            defender_cards: vec![(CardProto {color: Some(ColorProto::Red.into()), value: Some(3)})],
+            intact_pattern: WallPatternProto::Color.into(),
+            damaged_length: 3,
+            damaged_pattern: WallPatternProto::Run.into(),
+            status: StatusProto::Intact.into(),
+            attacker_cards: vec![
+                (CardProto {
+                    color: ColorProto::Blue.into(),
+                    value: 8,
+                }),
+            ],
+            defender_cards: vec![
+                (CardProto {
+                    color: ColorProto::Red.into(),
+                    value: 3,
+                }),
+            ],
             attacker_finished_first: Some(false),
         }
     }
@@ -198,12 +208,30 @@ mod tests {
 
     #[test]
     fn test_wall_pattern_from_proto() {
-        assert_eq!(WallPattern::from_proto(WallPatternProto::Color.into()), WallPattern::Color);
-        assert_eq!(WallPattern::from_proto(WallPatternProto::Run.into()), WallPattern::Run);
-        assert_eq!(WallPattern::from_proto(WallPatternProto::Equals.into()), WallPattern::Equal);
-        assert_eq!(WallPattern::from_proto(WallPatternProto::Plus.into()), WallPattern::Plus);
-        assert_eq!(WallPattern::from_proto(WallPatternProto::Minus.into()), WallPattern::Minus);
-        assert_eq!(WallPattern::from_proto(WallPatternProto::NonePattern.into()), WallPattern::None);
+        assert_eq!(
+            WallPattern::from_proto(WallPatternProto::Color.into()),
+            WallPattern::Color
+        );
+        assert_eq!(
+            WallPattern::from_proto(WallPatternProto::Run.into()),
+            WallPattern::Run
+        );
+        assert_eq!(
+            WallPattern::from_proto(WallPatternProto::Equals.into()),
+            WallPattern::Equal
+        );
+        assert_eq!(
+            WallPattern::from_proto(WallPatternProto::Plus.into()),
+            WallPattern::Plus
+        );
+        assert_eq!(
+            WallPattern::from_proto(WallPatternProto::Minus.into()),
+            WallPattern::Minus
+        );
+        assert_eq!(
+            WallPattern::from_proto(WallPatternProto::NonePattern.into()),
+            WallPattern::None
+        );
     }
 
     #[test]
@@ -211,7 +239,7 @@ mod tests {
     fn test_wall_pattern_from_proto_unknown_panic() {
         WallPattern::from_proto(99);
     }
-    
+
     #[test]
     fn test_from_proto_array() {
         let mut proto_array = vec![];
