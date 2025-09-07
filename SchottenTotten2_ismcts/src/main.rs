@@ -1,23 +1,25 @@
 mod game_state;
 mod node;
 mod parallel_multi_observer_ismcts;
-mod schotten_totten_2_state;
+mod schotten_totten_2;
 
 use parallel_multi_observer_ismcts::parallel_multi_observer_ismcts;
 use prost::Message;
 use prost::bytes::{BufMut, BytesMut};
+use schotten_totten_2::schotten_totten_2_state;
 use std::env;
 use std::io;
 use std::io::prelude::*;
 use std::net::TcpStream;
 
-use crate::schotten_totten_2_state::{SchottenTotten2State, com_st_proto};
+use schotten_totten_2::com_st_proto;
+use schotten_totten_2_state::SchottenTotten2State;
 
 // Helper function to write a length-delimited protobuf message to a stream
 fn write_delimited<T: Message>(stream: &mut TcpStream, msg: &T) -> io::Result<()> {
     // Encode the message to a buffer
     let mut prefixed_buf = Vec::new();
-    prost::Message::encode_length_delimited(msg, &mut prefixed_buf)?;
+    msg.encode_length_delimited(&mut prefixed_buf)?;
 
     // Write the full length-prefixed buffer to the stream
     stream.write_all(&prefixed_buf)?;
