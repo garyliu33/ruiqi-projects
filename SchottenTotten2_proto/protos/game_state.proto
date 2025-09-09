@@ -30,4 +30,5 @@ message GameStateProto {
     optional CardProto last_played_card = 11;
     repeated CardProto attacker_hand = 12;
     repeated CardProto defender_hand = 13;
+    optional string uuid = 14;
 }
