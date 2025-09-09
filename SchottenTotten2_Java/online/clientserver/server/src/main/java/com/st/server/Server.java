@@ -61,6 +61,26 @@ public class Server {
     }
 
     void handlePlayer(NetworkSocket clientSocket, ClientDeclarationProto declaration) throws IOException {
+        if (declaration.hasUuid()) {
+            try {
+                UUID uuid = UUID.fromString(declaration.getUuid());
+                Client existingClient = findClientByUuid(uuid);
+                if (existingClient != null) {
+                    System.out.println("Player " + uuid + " reconnected.");
+                    existingClient.reconnect(clientSocket);
+                    return;
+                } else {
+                    System.out.println("Reconnect attempt from unknown UUID " + uuid + ". Rejecting.");
+                    clientSocket.close();
+                    return;
+                }
+            } catch (IllegalArgumentException e) {
+                System.out.println("Invalid UUID format received. Rejecting client.");
+                clientSocket.close();
+                return;
+            }
+        }
+
         boolean attackerTaken = false;
         boolean defenderTaken = false;
         for (Client c : clients) {

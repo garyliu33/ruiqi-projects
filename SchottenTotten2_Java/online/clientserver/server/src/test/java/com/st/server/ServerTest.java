@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -168,6 +169,57 @@ class ServerTest {
         assertEquals(2, clients.size()); // No new client added
     }
 
+    @Test
+    void testPlayerReconnect_Success() throws IOException {
+        // 1. Create an initial client and add it to the server
+        FakeNetworkSocket originalSocket = new FakeNetworkSocket(new byte[0]);
+        Client existingClient = new Client(originalSocket, Role.ATTACKER);
+        getClients(server).add(existingClient);
+
+        // 2. Simulate a reconnection attempt with the same UUID
+        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
+                .setClientType(ClientTypeProto.PLAYER)
+                .setUuid(existingClient.getUuid().toString())
+                .build();
+
+        // The new socket that the client is reconnecting with
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        declaration.writeDelimitedTo(outputStream);
+        FakeNetworkSocket newSocket = new FakeNetworkSocket(outputStream.toByteArray());
+        networkServer.newConnection(newSocket.getInputStream().readAllBytes());
+
+        server.startAccepting();
+
+        // 3. Assertions
+        List<Client> clients = getClients(server);
+        assertEquals(1, clients.size(), "A new client should not have been added.");
+        assertNotSame(originalSocket, clients.get(0).getSocket(), "The client's socket should be updated to the new one.");
+        assertTrue(originalSocket.isClosed(), "The original socket should be closed after reconnection.");
+
+        newSocket.close();
+    }
+
+    @Test
+    void testPlayerReconnect_UnknownUuid_Rejected() throws IOException {
+        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
+                .setClientType(ClientTypeProto.PLAYER)
+                .setUuid("123e4567-e89b-12d3-a456-426614174000") // A random, unknown UUID
+                .build();
+        simulateClientConnection(declaration);
+
+        List<Client> clients = getClients(server);
+        assertTrue(clients.isEmpty(), "Connection with unknown UUID should be rejected.");
+    }
+
+    @Test
+    void testPlayerReconnect_InvalidUuid_Rejected() throws IOException {
+        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
+                .setClientType(ClientTypeProto.PLAYER)
+                .setUuid("not-a-valid-uuid")
+                .build();
+        simulateClientConnection(declaration);
+        assertTrue(getClients(server).isEmpty(), "Connection with invalid UUID should be rejected.");
+    }
 
     @SuppressWarnings("unchecked")
     private List<Client> getClients(Server server) {
