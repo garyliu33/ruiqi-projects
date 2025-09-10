@@ -12,7 +12,7 @@ pub struct DisplayConstants {
     pub radius: f32,
     pub thickness: f32,
     pub thick_highlight: f32,
-    pub thin_highlight: f32
+    pub thin_highlight: f32,
 }
 
 impl DisplayConstants {

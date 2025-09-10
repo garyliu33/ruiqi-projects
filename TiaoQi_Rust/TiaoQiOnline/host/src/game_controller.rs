@@ -31,7 +31,6 @@ impl GameController {
     }
 
     pub fn start_game(&mut self) {
-        self.send_game_state();
         let mut sent_disconnect_message = false;
 
         loop {
@@ -128,6 +127,6 @@ impl GameController {
             None => None
         };
         
-        ClientGameState::new(cells, self.get_clickable_cells(), self.selected_piece, previous_move_path, self.current_turn == id)
+        ClientGameState::new(cells, self.get_clickable_cells(), self.selected_piece, previous_move_path, self.current_turn == id, self.ids[id] as f32 * 60.0)
     }
 }

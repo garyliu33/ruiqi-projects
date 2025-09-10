@@ -1,6 +1,5 @@
 use std::collections::{HashSet, VecDeque};
 use common::piece_color::PieceColor;
-use common::server_message::ClientGameState;
 use crate::cell::Cell;
 
 pub struct Board {

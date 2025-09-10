@@ -17,11 +17,12 @@ pub struct ClientGameState {
     pub clickable_cells: HashSet<usize>,
     pub selected_piece: Option<usize>,
     pub previous_move_path: Option<Vec<usize>>,
-    pub is_your_turn: bool
+    pub is_your_turn: bool,
+    pub rotation: f32
 }
 
 impl ClientGameState {
-    pub fn new(cells: [Option<PieceColor>; 121], clickable_cells: HashSet<usize>, selected_piece: Option<usize>, previous_move_path: Option<Vec<usize>>, is_your_turn: bool) -> Self {
-        Self { cells, clickable_cells, selected_piece, previous_move_path, is_your_turn }
+    pub fn new(cells: [Option<PieceColor>; 121], clickable_cells: HashSet<usize>, selected_piece: Option<usize>, previous_move_path: Option<Vec<usize>>, is_your_turn: bool, rotation: f32) -> Self {
+        Self { cells, clickable_cells, selected_piece, previous_move_path, is_your_turn, rotation }
     }
 }

@@ -146,11 +146,11 @@ async fn main() {
                             let server_message: ServerMessage = serde_json::from_str(&buffer).unwrap();
                             match server_message {
                                 ServerMessage::GameState(game_state) => {
-                                    let current_board = board.get_or_insert_with(BoardView::new);
+                                    let current_board = board.get_or_insert_with(|| BoardView::new(game_state.rotation));
                                     current_board.update_board(&game_state)
                                 }
                                 ServerMessage::GameOver(game_state, msg) => {
-                                    let current_board = board.get_or_insert_with(BoardView::new);
+                                    let current_board = board.get_or_insert_with(|| BoardView::new(game_state.rotation));
                                     current_board.update_board(&game_state);
 
                                     if let Some(final_board) = board.take() {

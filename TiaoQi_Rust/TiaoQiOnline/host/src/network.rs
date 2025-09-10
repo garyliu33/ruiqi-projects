@@ -51,6 +51,7 @@ impl Network {
 
     pub fn start_game(&mut self) {
         self.game_started = true;
+
     }
 
     /// Checks for and accepts new connections to fill empty player slots.
