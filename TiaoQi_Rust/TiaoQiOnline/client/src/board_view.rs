@@ -35,9 +35,9 @@ impl BoardView {
     }
 
     pub fn draw(&self) {
-        // for i in 0..6 {
-        //     self.draw_target_marker(i);
-        // }
+        for i in 0..6 {
+            self.draw_target_marker(i);
+        }
 
         for cell in &self.cells {
             cell.draw();
