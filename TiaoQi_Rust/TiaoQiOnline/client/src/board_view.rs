@@ -1,22 +1,22 @@
-use std::f32::consts::PI;
 use macroquad::prelude::*;
 use common::client_move::ClientMove;
 use crate::cell_view::CellView;
-use crate::display_constants::*;
+use crate::display_assets::*;
 use common::piece_color::PieceColor;
 use common::server_message::ClientGameState;
 
 pub struct BoardView {
     cells: [CellView; 121],
-    rotation: f32
+    rotation: f32,
+    ids: Vec<usize>
 }
 
 impl BoardView {
-    pub fn new(rotation: f32) -> Self {
+    pub fn new(rotation: f32, ids: Vec<usize>) -> Self {
         let cells = std::array::from_fn(|i| {
             CellView::new(i, None, 0.0, 0.0, false)
         });
-        let mut view = Self { cells, rotation };
+        let mut view = Self { cells, rotation, ids };
 
         let constants = DISPLAY_CONSTANTS.get().unwrap().read().unwrap();
         view.update_positions(&constants);
@@ -35,8 +35,8 @@ impl BoardView {
     }
 
     pub fn draw(&self) {
-        for i in 0..6 {
-            self.draw_target_marker(i);
+        for i in &self.ids {
+            self.draw_target_marker(*i);
         }
 
         for cell in &self.cells {
@@ -45,12 +45,11 @@ impl BoardView {
     }
 
     fn draw_target_marker(&self, i: usize) {
-        let scale = DISPLAY_CONSTANTS.get().unwrap().read().unwrap().cell_location_scale;
-        let mut color = PieceColor::get_color(i).get_display_color();
-        color.a = 0.5;
+        let constants = DISPLAY_CONSTANTS.get().unwrap().read().unwrap();
+        let color = PieceColor::get_color(i).get_display_color();
         let center = vec2(screen_width() / 2.0, screen_height() / 2.0);
-        let c = TRIANGLE_TIPS[(i + 3) % 6];
-        draw_hexagon(c.x, c.y, 3.0, 3.0, true, color, color);
+        let c = rotate(TRIANGLE_TIPS[(i + 3) % 6], self.rotation);
+        draw_mesh(&gradient_ring_mesh(center.x + c.x * constants.cell_location_scale, center.y + c.y * constants.cell_location_scale, 0.0, constants.target_marker_radius, color, transparent(color)));
     }
 
     pub fn update_board(&mut self, state: &ClientGameState) {
@@ -233,10 +232,3 @@ static TRIANGLE_TIPS: [Vec2; 6] = [
     vec2(-15.0 + R3, -5.0 * R3 + 1.0),
     vec2(-15.0 + R3, 5.0 * R3 - 1.0)
 ];
-
-fn rotate(p: Vec2, deg: f32) -> Vec2 {
-    let rad = deg * PI / 180.0;
-    let sin = rad.sin();
-    let cos = rad.cos();
-    vec2(p.x * cos - p.y * sin, p.x * sin + p.y * cos)
-}

@@ -5,9 +5,9 @@ use std::sync::RwLock;
 use macroquad::prelude::*;
 use common::server_message::ServerMessage;
 use crate::board_view::BoardView;
-use crate::display_constants::{DisplayConstants, DISPLAY_CONSTANTS};
+use crate::display_assets::{DisplayConstants, DISPLAY_CONSTANTS};
 
-mod display_constants;
+mod display_assets;
 mod cell_view;
 mod board_view;
 
@@ -146,11 +146,11 @@ async fn main() {
                             let server_message: ServerMessage = serde_json::from_str(&buffer).unwrap();
                             match server_message {
                                 ServerMessage::GameState(game_state) => {
-                                    let current_board = board.get_or_insert_with(|| BoardView::new(game_state.rotation));
+                                    let current_board = board.get_or_insert_with(|| BoardView::new(game_state.rotation, game_state.ids.clone()));
                                     current_board.update_board(&game_state)
                                 }
                                 ServerMessage::GameOver(game_state, msg) => {
-                                    let current_board = board.get_or_insert_with(|| BoardView::new(game_state.rotation));
+                                    let current_board = board.get_or_insert_with(|| BoardView::new(game_state.rotation, game_state.ids.clone()));
                                     current_board.update_board(&game_state);
 
                                     if let Some(final_board) = board.take() {

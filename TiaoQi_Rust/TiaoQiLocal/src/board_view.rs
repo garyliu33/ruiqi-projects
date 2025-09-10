@@ -1,20 +1,21 @@
 use std::collections::HashSet;
 use macroquad::prelude::*;
 use crate::board::Board;
-use crate::cell_view::{gradient_ring_mesh, transparent, CellView};
-use crate::display_constants::*;
+use crate::cell_view::CellView;
+use crate::display_assets::*;
 use crate::piece_color::PieceColor;
 
 pub struct BoardView {
-    cells: [CellView; 121]
+    cells: [CellView; 121],
+    players: Vec<usize>
 }
 
 impl BoardView {
-    pub fn new(board: &Board) -> Self {
+    pub fn new(board: &Board, players: Vec<usize>) -> Self {
         let cells = std::array::from_fn(|i| {
             CellView::new(i, board.cells[i].color, 0.0, 0.0, false)
         });
-        let mut view = Self { cells };
+        let mut view = Self { cells, players };
 
         let constants = DISPLAY_CONSTANTS.get().unwrap().read().unwrap();
         view.update_positions(&constants);
@@ -33,8 +34,8 @@ impl BoardView {
     }
 
     pub fn draw(&self) {
-        for i in 0..6 {
-            self.draw_target_marker(i);
+        for i in &self.players {
+            self.draw_target_marker(*i);
         }
 
         for cell in &self.cells {
@@ -43,11 +44,11 @@ impl BoardView {
     }
 
     fn draw_target_marker(&self, i: usize) {
-        let scale = DISPLAY_CONSTANTS.get().unwrap().read().unwrap().cell_location_scale;
+        let constants = DISPLAY_CONSTANTS.get().unwrap().read().unwrap();
         let color = PieceColor::get_color(i).get_display_color();
         let center = vec2(screen_width() / 2.0, screen_height() / 2.0);
         let c = TRIANGLE_TIPS[(i + 3) % 6];
-        draw_mesh(&gradient_ring_mesh(center.x + c.x * scale, center.y + c.y * scale, 0.0, 11.0, color, transparent(color)));
+        draw_mesh(&gradient_ring_mesh(center.x + c.x * constants.cell_location_scale, center.y + c.y * constants.cell_location_scale, 0.0, constants.target_marker_radius, color, transparent(color)));
     }
 
     pub fn update_board(&mut self, board: &Board, clickable_cells: HashSet<usize>, selected_piece: Option<usize>, previous_move_path: Vec<usize>) {

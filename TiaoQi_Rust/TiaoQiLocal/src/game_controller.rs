@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use crate::board::Board;
 use crate::board_view::BoardView;
-use crate::display_constants::DISPLAY_CONSTANTS;
+use crate::display_assets::DISPLAY_CONSTANTS;
 use crate::piece_color::PieceColor;
 
 pub struct GameController {
@@ -25,7 +25,7 @@ impl GameController {
             _ => unreachable!()
         };
         board.setup(ids.clone());
-        let board_view = BoardView::new(&board);
+        let board_view = BoardView::new(&board, ids.clone());
         Self { board, board_view, ids, current_turn: 0, selected_piece: None, previous_move: None }
     }
 

@@ -19,7 +19,6 @@ impl PlayerStream {
 pub struct Network {
     pub player_streams: Vec<Option<PlayerStream>>,
     listener: TcpListener,
-    game_started: bool
 }
 
 impl Network {
@@ -44,13 +43,7 @@ impl Network {
         Ok(Self {
             player_streams,
             listener,
-            game_started: false
         })
-    }
-
-    pub fn start_game(&mut self) {
-        self.game_started = true;
-
     }
 
     /// Checks for and accepts new connections to fill empty player slots.

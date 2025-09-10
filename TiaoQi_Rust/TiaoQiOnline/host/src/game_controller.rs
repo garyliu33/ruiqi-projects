@@ -127,6 +127,6 @@ impl GameController {
             None => None
         };
         
-        ClientGameState::new(cells, self.get_clickable_cells(), self.selected_piece, previous_move_path, self.current_turn == id, self.ids[id] as f32 * 60.0)
+        ClientGameState::new(cells, self.get_clickable_cells(), self.selected_piece, previous_move_path, self.current_turn == id, self.ids[id] as f32 * 60.0, self.ids.clone())
     }
 }

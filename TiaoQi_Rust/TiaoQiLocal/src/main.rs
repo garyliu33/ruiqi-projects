@@ -3,11 +3,11 @@ mod game_controller;
 mod board_view;
 mod cell_view;
 mod piece_color;
-mod display_constants;
+mod display_assets;
 
 use std::sync::RwLock;
 use macroquad::prelude::*;
-use crate::display_constants::{DisplayConstants, DISPLAY_CONSTANTS};
+use crate::display_assets::{DisplayConstants, DISPLAY_CONSTANTS};
 use crate::game_controller::GameController;
 
 fn window_conf() -> Conf {

@@ -58,9 +58,7 @@ fn main() {
         // Sleep to prevent the loop from using 100% CPU.
         thread::sleep(Duration::from_millis(100));
     }
-
-    network.start_game();
-
+    
     // The GameController takes over to run the actual game logic.
     let mut game_controller = GameController::new(last_player_count, network);
     game_controller.start_game();
