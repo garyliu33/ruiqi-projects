@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use macroquad::prelude::*;
 use crate::board::Board;
-use crate::cell_view::CellView;
+use crate::cell_view::{gradient_ring_mesh, transparent, CellView};
 use crate::display_constants::*;
 use crate::piece_color::PieceColor;
 
@@ -44,14 +44,10 @@ impl BoardView {
 
     fn draw_target_marker(&self, i: usize) {
         let scale = DISPLAY_CONSTANTS.get().unwrap().read().unwrap().cell_location_scale;
-        let mut color = PieceColor::get_color(i).get_display_color();
-        color.a = 0.8;
+        let color = PieceColor::get_color(i).get_display_color();
         let center = vec2(screen_width() / 2.0, screen_height() / 2.0);
-        let [c1, c2, c3] = TRIANGLE_CORNERS[(i + 3) % 6];
-        draw_triangle(center + c1 * scale,
-                            center + c2 * scale,
-                            center + c3 * scale,
-                            color);
+        let c = TRIANGLE_TIPS[(i + 3) % 6];
+        draw_mesh(&gradient_ring_mesh(center.x + c.x * scale, center.y + c.y * scale, 0.0, 11.0, color, transparent(color)));
     }
 
     pub fn update_board(&mut self, board: &Board, clickable_cells: HashSet<usize>, selected_piece: Option<usize>, previous_move_path: Vec<usize>) {
@@ -213,11 +209,11 @@ static CELL_LOCATIONS: [[f32; 2]; 121] = [
     [0.0, -8.0 * R3]
 ];
 
-static TRIANGLE_CORNERS: [[Vec2; 3]; 6] = [
-    [vec2(0.0, 10.0 * R3 - 2.0), vec2(-6.0 + R3, 4.0 * R3 + 1.0), vec2(6.0 - R3, 4.0 * R3 + 1.0)],
-    [vec2(9.0, -1.0 * R3 + 2.0), vec2(3.0 + R3, 5.0 * R3 - 1.0), vec2(15.0 - R3, 5.0 * R3 - 1.0)],
-    [vec2(9.0, 1.0 * R3 - 2.0), vec2(3.0 + R3, -5.0 * R3 + 1.0), vec2(15.0 - R3, -5.0 * R3 + 1.0)],
-    [vec2(0.0, -10.0 * R3 + 2.0), vec2(-6.0 + R3, -4.0 * R3 - 1.0), vec2(6.0 - R3, -4.0 * R3 - 1.0)],
-    [vec2(-9.0, 1.0 * R3 - 2.0), vec2(-3.0 - R3, -5.0 * R3 + 1.0), vec2(-15.0 + R3, -5.0 * R3 + 1.0)],
-    [vec2(-9.0, -1.0 * R3 + 2.0), vec2(-3.0 - R3, 5.0 * R3 - 1.0), vec2(-15.0 + R3, 5.0 * R3 - 1.0)]
+static TRIANGLE_TIPS: [Vec2; 6] = [
+    vec2(0.0, 10.0 * R3 - 2.0),
+    vec2(15.0 - R3, 5.0 * R3 - 1.0),
+    vec2(15.0 - R3, -5.0 * R3 + 1.0),
+    vec2(0.0, -10.0 * R3 + 2.0),
+    vec2(-15.0 + R3, -5.0 * R3 + 1.0),
+    vec2(-15.0 + R3, 5.0 * R3 - 1.0)
 ];

@@ -3,7 +3,6 @@ use std::net::{TcpListener, TcpStream};
 use local_ip_address::local_ip;
 use common::client_move::ClientMove;
 use common::server_message::{ClientGameState, ServerMessage};
-use crate::board::Board;
 
 pub struct PlayerStream {
     pub stream: TcpStream,

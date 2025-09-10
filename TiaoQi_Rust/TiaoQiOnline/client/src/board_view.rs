@@ -47,13 +47,10 @@ impl BoardView {
     fn draw_target_marker(&self, i: usize) {
         let scale = DISPLAY_CONSTANTS.get().unwrap().read().unwrap().cell_location_scale;
         let mut color = PieceColor::get_color(i).get_display_color();
-        color.a = 0.8;
+        color.a = 0.5;
         let center = vec2(screen_width() / 2.0, screen_height() / 2.0);
-        let [c1, c2, c3] = TRIANGLE_CORNERS[(i + 3) % 6];
-        draw_triangle(center + c1 * scale,
-                      center + c2 * scale,
-                      center + c3 * scale,
-                      color);
+        let c = TRIANGLE_TIPS[(i + 3) % 6];
+        draw_hexagon(c.x, c.y, 3.0, 3.0, true, color, color);
     }
 
     pub fn update_board(&mut self, state: &ClientGameState) {
@@ -226,6 +223,15 @@ static TRIANGLE_CORNERS: [[Vec2; 3]; 6] = [
     [vec2(0.0, -10.0 * R3 + 2.0), vec2(-6.0 + R3, -4.0 * R3 - 1.0), vec2(6.0 - R3, -4.0 * R3 - 1.0)],
     [vec2(-9.0, 1.0 * R3 - 2.0), vec2(-3.0 - R3, -5.0 * R3 + 1.0), vec2(-15.0 + R3, -5.0 * R3 + 1.0)],
     [vec2(-9.0, -1.0 * R3 + 2.0), vec2(-3.0 - R3, 5.0 * R3 - 1.0), vec2(-15.0 + R3, 5.0 * R3 - 1.0)]
+];
+
+static TRIANGLE_TIPS: [Vec2; 6] = [
+    vec2(0.0, 10.0 * R3 - 2.0),
+    vec2(15.0 - R3, 5.0 * R3 - 1.0),
+    vec2(15.0 - R3, -5.0 * R3 + 1.0),
+    vec2(0.0, -10.0 * R3 + 2.0),
+    vec2(-15.0 + R3, -5.0 * R3 + 1.0),
+    vec2(-15.0 + R3, 5.0 * R3 - 1.0)
 ];
 
 fn rotate(p: Vec2, deg: f32) -> Vec2 {

@@ -96,7 +96,7 @@ impl CellView {
     }
 }
 
-fn gradient_ring_mesh(x: f32, y: f32, radius: f32, thickness: f32, inner_color: Color, outer_color: Color) -> Mesh {
+pub fn gradient_ring_mesh(x: f32, y: f32, radius: f32, thickness: f32, inner_color: Color, outer_color: Color) -> Mesh {
     let mut vertices = vec![];
     let mut indices = vec![];
 
@@ -146,6 +146,6 @@ fn gradient_ring_mesh(x: f32, y: f32, radius: f32, thickness: f32, inner_color: 
     Mesh{ vertices, indices, texture: None }
 }
 
-fn transparent(color: Color) -> Color {
+pub fn transparent(color: Color) -> Color {
     Color::new(color.r, color.g, color.b, 0.0)
 }
