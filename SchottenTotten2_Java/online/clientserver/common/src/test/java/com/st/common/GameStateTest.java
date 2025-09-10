@@ -45,8 +45,8 @@ class GameStateTest {
         defenderHand.add(new Card(CardColor.YELLOW, 4));
 
         walls = new Wall[] {
-            new Wall(0, 10, 0, WallPattern.NONE, WallPattern.NONE),
-            new Wall(1, 5, 5, WallPattern.NONE, WallPattern.NONE)
+            new Wall(0),
+            new Wall(1)
         };
 
         deckSize = 25;
@@ -130,7 +130,7 @@ class GameStateTest {
         protoBuilder.addDefenderHand(new Card(CardColor.BLUE, 2).toProto());
         
         // Add wall proto
-        Wall wall = new Wall(0, 5, 5, WallPattern.PLUS, WallPattern.MINUS);
+        Wall wall = new Wall(0);
         wall.getAttackerCards().add(new Card(CardColor.GREEN, 1));
         wall.getDefenderCards().add(new Card(CardColor.YELLOW, 2));
         protoBuilder.addWalls(wall.toProto());

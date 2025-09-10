@@ -13,10 +13,6 @@ import com.st.proto.Wall.WallProto;
 public class Wall {
     private final int wallIndex;
     private Status status;
-    private final int intactLength;
-    private final int damagedLength;
-    private final WallPattern intactPattern;
-    private final WallPattern damagedPattern;
 
     private final List<Card> attackerCards;
     private final List<Card> defenderCards;
@@ -58,20 +54,13 @@ public class Wall {
         }
     }
 
-    public Wall(int wallIndex, int intactLength, int damagedLength, WallPattern intactPattern,
-            WallPattern damagedPattern) {
-        this(wallIndex, intactLength, damagedLength, intactPattern,
-                damagedPattern, Status.INTACT);
+    public Wall(int wallIndex) {
+        this(wallIndex, Status.INTACT);
     }
 
-    public Wall(int wallIndex, int intactLength, int damagedLength,
-            WallPattern intactPattern, WallPattern damagedPattern, Status status) {
+    public Wall(int wallIndex, Status status) {
         this.wallIndex = wallIndex;
         this.status = status;
-        this.intactLength = intactLength;
-        this.damagedLength = damagedLength;
-        this.intactPattern = intactPattern;
-        this.damagedPattern = damagedPattern;
 
         this.attackerCards = new ArrayList<>();
         this.defenderCards = new ArrayList<>();
@@ -100,11 +89,11 @@ public class Wall {
     }
 
     public WallPattern getPattern() {
-        return status == Status.INTACT? intactPattern : damagedPattern;
+        return status == Status.INTACT ? Constants.WALL_PATTERNS[wallIndex] : Constants.DAMAGED_WALL_PATTERNS[wallIndex];
     }
 
     public int getLength() {
-        return status == Status.INTACT? intactLength : damagedLength;
+        return status == Status.INTACT ? Constants.WALL_LENGTHS[wallIndex] : Constants.DAMAGED_WALL_LENGTHS[wallIndex];
     }
 
     public int getWallIndex() {
@@ -287,11 +276,7 @@ public class Wall {
     }
 
     public static Wall fromProto(WallProto proto) {
-        Wall wall = new Wall(proto.getWallIndex(), proto.getIntactLength(),
-                proto.getDamagedLength(),
-                WallPattern.fromProto(proto.getIntactPattern()),
-                WallPattern.fromProto(proto.getDamagedPattern()),
-                Status.fromProto(proto.getStatus()));
+        Wall wall = new Wall(proto.getWallIndex(), Status.fromProto(proto.getStatus()));
         for (int i = 0; i < proto.getAttackerCardsCount(); i++) {
             wall.attackerCards.add(Card.fromProto(proto.getAttackerCards(i)));
         }

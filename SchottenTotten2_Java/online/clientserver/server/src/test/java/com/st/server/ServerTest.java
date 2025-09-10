@@ -1,234 +1,201 @@
 package com.st.server;
 
 import com.st.common.Role;
+import com.st.proto.GameService.ClientToServer;
+import com.st.proto.GameService.ServerToClient;
+import com.st.proto.Participant;
 import com.st.proto.Participant.ClientDeclarationProto;
-import com.st.proto.Participant.ClientTypeProto;
-import com.st.proto.Participant.RoleProto;
+import com.st.proto.Participant.ReconnectProto;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerTest {
 
     private Server server;
-    private FakeNetworkServer networkServer;
+    private FakeStreamObserver fakeServerObserver; // This observer represents the server's view of the client stream
+    private StreamObserver<ClientToServer> clientStream; // This observer is what the test uses to send messages to the server
 
     @BeforeEach
     void setUp() {
-        networkServer = new FakeNetworkServer();
-        server = new Server(networkServer) {
-            @Override
-            public void startAccepting() {
-                // Process only one client for testing
-                try {
-                    NetworkSocket clientSocket = networkServer.accept();
-                    if (clientSocket != null) {
-                        handleClient(clientSocket);
-                    }
-                } catch (IOException e) {
-                    fail("Test failed due to IOException", e);
-                }
-            }
-        };
-    }
-
-    private void simulateClientConnection(ClientDeclarationProto declaration) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        declaration.writeDelimitedTo(outputStream);
-        networkServer.newConnection(outputStream.toByteArray());
-        server.startAccepting();
+        server = new Server();
+        fakeServerObserver = new FakeStreamObserver();
+        clientStream = server.gameStream(fakeServerObserver);
     }
 
     @Test
-    void testWatcherConnection() throws IOException {
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.WATCHER)
-                .build();
-        simulateClientConnection(declaration);
+    void testWatcherConnection() {
+        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder().setClientType(com.st.proto.Participant.ClientTypeProto.WATCHER).build();
+        ClientToServer request = ClientToServer.newBuilder().setDeclaration(declaration).build();
+        clientStream.onNext(request);
 
-        List<Client> clients = getClients(server);
-        assertEquals(1, clients.size());
-        assertEquals(Client.ClientType.WATCHER, clients.get(0).getClientType());
-        assertNull(clients.get(0).getRole());
+        // Watchers are not added to the players list, but to the watchers set.
+        assertEquals(0, getPlayers(server).size());
+        assertEquals(1, getWatchers(server).size());
+
+        // A watcher connecting before the game starts should receive an empty game state.
+        List<ServerToClient> messages = fakeServerObserver.getReceivedMessages();
+        assertEquals(1, messages.size(), "Watcher should receive exactly one message.");
+        assertTrue(messages.get(0).hasGameState(), "Message should be a game state update.");
+        // An empty/default GameState has 0 deck size and no winner.
+        assertEquals(0, messages.get(0).getGameState().getDeckSize());
+
+        assertNull(fakeServerObserver.getReceivedError());
     }
 
     @Test
-    void testFirstPlayerConnectsAsAttacker() throws IOException {
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setRole(RoleProto.ROLE_UNSPECIFIED)
-                .build();
-        simulateClientConnection(declaration);
+    void testFirstPlayerConnectsAsAttacker() {
+        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder().setClientType(com.st.proto.Participant.ClientTypeProto.PLAYER).build();
+        ClientToServer request = ClientToServer.newBuilder().setDeclaration(declaration).build();
+        clientStream.onNext(request);
 
-        List<Client> clients = getClients(server);
-        assertEquals(1, clients.size());
-        assertEquals(Client.ClientType.PLAYER, clients.get(0).getClientType());
-        assertEquals(Role.ATTACKER, clients.get(0).getRole());
+        List<PlayerConnection> players = getPlayers(server);
+        assertEquals(1, players.size());
+        assertEquals(Role.ATTACKER, players.get(0).getRole());
+        assertNull(fakeServerObserver.getReceivedError());
+
+        // Verify the success response
+        List<ServerToClient> messages = fakeServerObserver.getReceivedMessages();
+        assertEquals(2, messages.size(), "Should receive declaration response and initial game state.");
+
+        // 1. Check declaration response
+        Participant.ClientDeclarationResponseProto response = messages.get(0).getDeclarationResponse();
+        assertEquals(Participant.ClientDeclarationResponseProto.Status.SUCCESS, response.getStatus());
+        assertEquals(Participant.RoleProto.ATTACKER_ROLE, response.getAssignedRole());
+
+        // 2. Check initial game state (should be empty)
+        assertTrue(messages.get(1).hasGameState(), "Second message should be a game state update.");
+        assertEquals(0, messages.get(1).getGameState().getDeckSize());
+
     }
 
     @Test
-    void testSecondPlayerConnectsAsDefender() throws IOException {
+    void testSecondPlayerConnectsAsDefender() {
         // First player
-        Client attacker = new Client(new FakeNetworkSocket(new byte[0]), Role.ATTACKER);
-        getClients(server).add(attacker);
+        PlayerConnection attacker = new PlayerConnection(Role.ATTACKER); // Manually add first player
+        getPlayers(server).add(attacker);
 
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setRole(RoleProto.ROLE_UNSPECIFIED)
-                .build();
-        simulateClientConnection(declaration);
+        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder().setClientType(com.st.proto.Participant.ClientTypeProto.PLAYER).build();
+        ClientToServer request = ClientToServer.newBuilder().setDeclaration(declaration).build();
+        clientStream.onNext(request);
 
-        List<Client> clients = getClients(server);
-        assertEquals(2, clients.size());
-        assertEquals(Role.DEFENDER, clients.get(1).getRole());
+        List<PlayerConnection> players = getPlayers(server);
+        assertEquals(2, players.size());
+        assertEquals(Role.DEFENDER, players.get(1).getRole());
+        assertNull(fakeServerObserver.getReceivedError());
     }
 
     @Test
-    void testPlayerRequestsAttackerRole_Available() throws IOException {
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setRole(RoleProto.ATTACKER_ROLE)
-                .build();
-        simulateClientConnection(declaration);
-
-        List<Client> clients = getClients(server);
-        assertEquals(1, clients.size());
-        assertEquals(Role.ATTACKER, clients.get(0).getRole());
-    }
-
-    @Test
-    void testPlayerRequestsDefenderRole_Available() throws IOException {
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setRole(RoleProto.DEFENDER_ROLE)
-                .build();
-        simulateClientConnection(declaration);
-
-        List<Client> clients = getClients(server);
-        assertEquals(1, clients.size());
-        assertEquals(Role.DEFENDER, clients.get(0).getRole());
-    }
-
-    @Test
-    void testPlayerRequestsAttackerRole_Taken_AssignsDefender() throws IOException {
+    void testThirdPlayerConnection_Rejected() {
         // First player
-        Client attacker = new Client(new FakeNetworkSocket(new byte[0]), Role.ATTACKER);
-        getClients(server).add(attacker);
-
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setRole(RoleProto.ATTACKER_ROLE)
-                .build();
-        simulateClientConnection(declaration);
-
-        List<Client> clients = getClients(server);
-        assertEquals(2, clients.size());
-        assertEquals(Role.DEFENDER, clients.get(1).getRole());
-    }
-
-    @Test
-    void testPlayerRequestsDefenderRole_Taken_AssignsAttacker() throws IOException {
-        // First player
-        Client defender = new Client(new FakeNetworkSocket(new byte[0]), Role.DEFENDER);
-        getClients(server).add(defender);
-
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setRole(RoleProto.DEFENDER_ROLE)
-                .build();
-        simulateClientConnection(declaration);
-
-        List<Client> clients = getClients(server);
-        assertEquals(2, clients.size());
-        assertEquals(Role.ATTACKER, clients.get(1).getRole());
-    }
-
-    @Test
-    void testThirdPlayerConnection_Rejected() throws IOException {
-        // First player
-        Client attacker = new Client(new FakeNetworkSocket(new byte[0]), Role.ATTACKER);
-        getClients(server).add(attacker);
+        PlayerConnection attacker = new PlayerConnection(Role.ATTACKER); // Manually add first player
+        getPlayers(server).add(attacker);
         // Second player
-        Client defender = new Client(new FakeNetworkSocket(new byte[0]), Role.DEFENDER);
-        getClients(server).add(defender);
+        PlayerConnection defender = new PlayerConnection(Role.DEFENDER); // Manually add second player
+        getPlayers(server).add(defender);
 
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setRole(RoleProto.ROLE_UNSPECIFIED)
-                .build();
+        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder().setClientType(com.st.proto.Participant.ClientTypeProto.PLAYER).build();
+        ClientToServer request = ClientToServer.newBuilder().setDeclaration(declaration).build();
+        clientStream.onNext(request);
 
-        simulateClientConnection(declaration);
+        List<PlayerConnection> players = getPlayers(server);
+        assertEquals(2, players.size()); // No new client added
 
-        List<Client> clients = getClients(server);
-        assertEquals(2, clients.size()); // No new client added
+        // Instead of an error, we now expect a specific response message
+        assertNull(fakeServerObserver.getReceivedError(), "Should not throw an error for a full game.");
+        List<ServerToClient> messages = fakeServerObserver.getReceivedMessages();
+        assertEquals(1, messages.size());
+        Participant.ClientDeclarationResponseProto response = messages.get(0).getDeclarationResponse();
+        assertEquals(Participant.ClientDeclarationResponseProto.Status.GAME_FULL, response.getStatus());
     }
 
     @Test
-    void testPlayerReconnect_Success() throws IOException {
+    void testPlayerReconnect_Success() {
         // 1. Create an initial client and add it to the server
-        FakeNetworkSocket originalSocket = new FakeNetworkSocket(new byte[0]);
-        Client existingClient = new Client(originalSocket, Role.ATTACKER);
-        getClients(server).add(existingClient);
+        PlayerConnection existingPlayer = new PlayerConnection(Role.ATTACKER);
+        getPlayers(server).add(existingPlayer);
+        getPlayerObservers(server).put(existingPlayer.getUuid(), new FakeStreamObserver());
 
         // 2. Simulate a reconnection attempt with the same UUID
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setUuid(existingClient.getUuid().toString())
+        ReconnectProto reconnectProto = ReconnectProto.newBuilder()
+                .setUuid(existingPlayer.getUuid().toString())
                 .build();
-
-        // The new socket that the client is reconnecting with
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        declaration.writeDelimitedTo(outputStream);
-        FakeNetworkSocket newSocket = new FakeNetworkSocket(outputStream.toByteArray());
-        networkServer.newConnection(newSocket.getInputStream().readAllBytes());
-
-        server.startAccepting();
+        ClientToServer request = ClientToServer.newBuilder().setReconnect(reconnectProto).build();
+        clientStream.onNext(request);
 
         // 3. Assertions
-        List<Client> clients = getClients(server);
-        assertEquals(1, clients.size(), "A new client should not have been added.");
-        assertNotSame(originalSocket, clients.get(0).getSocket(), "The client's socket should be updated to the new one.");
-        assertTrue(originalSocket.isClosed(), "The original socket should be closed after reconnection.");
-
-        newSocket.close();
+        assertEquals(1, getPlayers(server).size(), "A new client should not have been added.");
+        // The observer in the map should be the one we passed to gameStream()
+        assertSame(fakeServerObserver, getPlayerObservers(server).get(existingPlayer.getUuid()), "The client's observer should be updated.");
+        assertNull(fakeServerObserver.getReceivedError());
     }
 
     @Test
-    void testPlayerReconnect_UnknownUuid_Rejected() throws IOException {
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setUuid("123e4567-e89b-12d3-a456-426614174000") // A random, unknown UUID
-                .build();
-        simulateClientConnection(declaration);
+    void testPlayerReconnect_UnknownUuid_Rejected() {
+        ReconnectProto reconnectProto = ReconnectProto.newBuilder().setUuid("123e4567-e89b-12d3-a456-426614174000") // A random, unknown UUID
+            .build();
+        ClientToServer request = ClientToServer.newBuilder().setReconnect(reconnectProto).build();
+        clientStream.onNext(request);
 
-        List<Client> clients = getClients(server);
-        assertTrue(clients.isEmpty(), "Connection with unknown UUID should be rejected.");
+        assertTrue(getPlayers(server).isEmpty(), "Connection with unknown UUID should be rejected.");
+        assertNotNull(fakeServerObserver.getReceivedError());
+        assertTrue(fakeServerObserver.getReceivedError() instanceof StatusRuntimeException);
+        StatusRuntimeException exception = (StatusRuntimeException) fakeServerObserver.getReceivedError();
+        assertEquals(Status.NOT_FOUND.getCode(), exception.getStatus().getCode());
     }
 
     @Test
-    void testPlayerReconnect_InvalidUuid_Rejected() throws IOException {
-        ClientDeclarationProto declaration = ClientDeclarationProto.newBuilder()
-                .setClientType(ClientTypeProto.PLAYER)
-                .setUuid("not-a-valid-uuid")
-                .build();
-        simulateClientConnection(declaration);
-        assertTrue(getClients(server).isEmpty(), "Connection with invalid UUID should be rejected.");
+    void testPlayerReconnect_InvalidUuid_Rejected() {
+        ReconnectProto reconnectProto = ReconnectProto.newBuilder().setUuid("not-a-valid-uuid").build();
+        ClientToServer request = ClientToServer.newBuilder().setReconnect(reconnectProto).build();
+        clientStream.onNext(request);
+        assertTrue(getPlayers(server).isEmpty(), "Connection with invalid UUID should be rejected.");
+        assertNotNull(fakeServerObserver.getReceivedError());
+        assertTrue(fakeServerObserver.getReceivedError() instanceof StatusRuntimeException);
+        StatusRuntimeException exception = (StatusRuntimeException) fakeServerObserver.getReceivedError();
+        assertEquals(Status.INVALID_ARGUMENT.getCode(), exception.getStatus().getCode());
     }
 
     @SuppressWarnings("unchecked")
-    private List<Client> getClients(Server server) {
+    private List<PlayerConnection> getPlayers(Server server) {
         try {
-            java.lang.reflect.Field field = Server.class.getDeclaredField("clients");
+            java.lang.reflect.Field field = Server.class.getDeclaredField("players");
             field.setAccessible(true);
-            return (List<Client>) field.get(server);
+            return (List<PlayerConnection>) field.get(server);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            fail("Failed to get clients field from Server", e);
+            fail("Failed to get players field from Server", e);
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConcurrentHashMap<UUID, StreamObserver<ServerToClient>> getPlayerObservers(Server server) {
+        try {
+            java.lang.reflect.Field field = Server.class.getDeclaredField("playerObservers");
+            field.setAccessible(true);
+            return (ConcurrentHashMap<UUID, StreamObserver<ServerToClient>>) field.get(server);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Failed to get playerObservers field from Server", e);
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private java.util.Set<StreamObserver<ServerToClient>> getWatchers(Server server) {
+        try {
+            java.lang.reflect.Field field = Server.class.getDeclaredField("watchers");
+            field.setAccessible(true);
+            return (java.util.Set<StreamObserver<ServerToClient>>) field.get(server);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Failed to get watchers field from Server", e);
             return null;
         }
     }
