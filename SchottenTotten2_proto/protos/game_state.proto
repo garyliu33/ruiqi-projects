@@ -5,30 +5,29 @@ package com.st.proto;
 import "card.proto";
 import "wall.proto";
 
+option java_package = "com.st.proto";
+option java_outer_classname = "GameState";
+
+message CardListProto {
+    repeated CardProto card_list = 1;
+}
+
 enum WinnerProto {
     NONE_WINNER = 0;
     ATTACKER = 1;
     DEFENDER = 2;
 }
 
-message CardListProto {
-    repeated CardProto card_list = 1;
-}
-
 message GameStateProto {
-    repeated CardProto host_hand = 1;
-    repeated CardProto client_hand = 2;
+    repeated CardProto attacker_hand = 1;
+    repeated CardProto defender_hand = 2;
     repeated WallProto walls = 3;
     int32 deck_size = 4;
-    // ColorProto to card list mapping.
     map<int32, CardListProto> discard = 5;
-    optional bool is_client_turn = 6;
+    bool is_client_turn = 6;
     int32 cauldron_count = 7;
     bool used_cauldron = 8;
-    optional bool is_client_attacker = 9;
+    bool is_client_attacker = 9;
     WinnerProto winner = 10;
     optional CardProto last_played_card = 11;
-    repeated CardProto attacker_hand = 12;
-    repeated CardProto defender_hand = 13;
-    optional string uuid = 14;
 }

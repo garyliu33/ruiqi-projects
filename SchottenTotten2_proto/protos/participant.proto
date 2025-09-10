@@ -19,5 +19,20 @@ enum RoleProto {
 message ClientDeclarationProto {
   ClientTypeProto client_type = 1;
   optional RoleProto role = 2; 
+}
+
+message ReconnectProto {
+  string uuid = 1;
+}
+
+message ClientDeclarationResponseProto {
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    SUCCESS = 1;
+    GAME_FULL = 2;
+  }
+
+  Status status = 1;
+  optional RoleProto assigned_role = 2;
   optional string uuid = 3;
 }

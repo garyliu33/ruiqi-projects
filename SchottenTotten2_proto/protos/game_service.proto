@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package com.st.proto;
+
+import "participant.proto";
+import "client_move.proto";
+import "game_state.proto";
+
+option java_package = "com.st.proto";
+option java_outer_classname = "GameService";
+
+message ClientToServer {
+  oneof message {
+    ClientDeclarationProto declaration = 1;
+    ReconnectProto reconnect = 2;
+    ClientMoveProto move = 3;
+  }
+}
+
+message ServerToClient {
+  oneof message {
+    GameStateProto game_state = 1;
+    ClientDeclarationResponseProto declaration_response = 2;
+    // Could add other server-to-client messages here, like error notifications.
+  }
+}
+
+// The service definition.
+service SchottenTotten2Service {
+  // A single bidirectional stream for all game communication.
+  rpc GameStream(stream ClientToServer) returns (stream ServerToClient);
+}

@@ -14,7 +14,7 @@ public class GameState {
     private final Set<Card> attackerHand;
     private final Set<Card> defenderHand;
     private final Wall[] walls;
-    private final int deckSize;
+    private final Deck deck;
     private final Map<CardColor, List<Card>> discard;
     private final boolean isClientTurn;
     private final int cauldronCount;
@@ -23,13 +23,13 @@ public class GameState {
     private final Winner winner;
     private final Card lastPlayedCard;
 
-    public GameState(Set<Card> attackerHand, Set<Card> defenderHand, Wall[] walls, int deckSize,
+    public GameState(Set<Card> attackerHand, Set<Card> defenderHand, Wall[] walls, Deck deck,
             Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount,
             boolean usedCauldron, boolean isClientAttacker, Winner winner, Card lastPlayedCard) {
         this.attackerHand = attackerHand;
         this.defenderHand = defenderHand;
         this.walls = walls;
-        this.deckSize = deckSize;
+        this.deck = deck;
         this.discard = discard;
         this.isClientTurn = isClientTurn;
         this.cauldronCount = cauldronCount;
@@ -51,8 +51,8 @@ public class GameState {
         return walls;
     }
 
-    public int getDeckSize() {
-        return deckSize;
+    public Deck getDeck() {
+        return deck;
     }
 
     public Map<CardColor, List<Card>> getDiscard() {
@@ -94,7 +94,7 @@ public class GameState {
         for (Wall w : walls) {
             builder.addWalls(w.toProto());
         }
-        builder.setDeckSize(deckSize);
+        builder.setDeckSize(deck.size());
         for (CardColor c : discard.keySet()) {
             List<Card> cards = discard.get(c);
             CardListProto.Builder cardListProtoBuilder = CardListProto.newBuilder();
@@ -141,7 +141,7 @@ public class GameState {
             discard.put(CardColor.values()[key], cards);
         }
 
-        return new GameState(attackerHand, defenderHand, walls, proto.getDeckSize(), discard,
+        return new GameState(attackerHand, defenderHand, walls, new Deck(proto.getDeckSize()), discard,
                 proto.getIsClientTurn(), proto.getCauldronCount(), proto.getUsedCauldron(),
                 proto.getIsClientAttacker(), Winner.fromProto(proto.getWinner()),
                 proto.hasLastPlayedCard() ? Card.fromProto(proto.getLastPlayedCard()) : null);
