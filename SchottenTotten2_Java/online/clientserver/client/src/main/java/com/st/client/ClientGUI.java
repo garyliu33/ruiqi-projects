@@ -31,7 +31,6 @@ public class ClientGUI {
     private static GameState gameState;
     private static GameView gameView;
     private static StreamObserver<ClientToServer> toServerStream;
-    private static String uuid; // To store the client's unique ID for reconnection
 
     public static void main(String[] args) {
         mainFrame = new JFrame("Schotten Totten 2 (client)");
@@ -116,7 +115,6 @@ public class ClientGUI {
             case DECLARATION_RESPONSE:
                 Participant.ClientDeclarationResponseProto response = message.getDeclarationResponse();
                 if (response.getStatus() == Participant.ClientDeclarationResponseProto.Status.SUCCESS) {
-                    uuid = response.getUuid();
                     Role role = response.getAssignedRole() == Participant.RoleProto.ATTACKER_ROLE ? Role.ATTACKER : Role.DEFENDER;
                     mainFrame.setTitle("Schotten Totten 2 (Client - " + role + ")");
                 } else if (response.getStatus() == Participant.ClientDeclarationResponseProto.Status.GAME_FULL) {
