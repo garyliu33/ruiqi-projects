@@ -12,7 +12,6 @@ option java_outer_classname = "GameService";
 message ClientToServer {
   oneof message {
     ClientDeclarationProto declaration = 1;
-    ReconnectProto reconnect = 2;
     ClientMoveProto move = 3;
   }
 }

@@ -5,15 +5,11 @@ import com.st.proto.GameService.ClientToServer;
 import com.st.proto.GameService.ServerToClient;
 import com.st.proto.Participant;
 import com.st.proto.Participant.ClientDeclarationProto;
-import com.st.proto.Participant.ReconnectProto;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -117,53 +113,6 @@ class ServerTest {
         assertEquals(Participant.ClientDeclarationResponseProto.Status.GAME_FULL, response.getStatus());
     }
 
-    @Test
-    void testPlayerReconnect_Success() {
-        // 1. Create an initial client and add it to the server
-        PlayerConnection existingPlayer = new PlayerConnection(Role.ATTACKER);
-        getPlayers(server).add(existingPlayer);
-        getPlayerObservers(server).put(existingPlayer.getUuid(), new FakeStreamObserver());
-
-        // 2. Simulate a reconnection attempt with the same UUID
-        ReconnectProto reconnectProto = ReconnectProto.newBuilder()
-                .setUuid(existingPlayer.getUuid().toString())
-                .build();
-        ClientToServer request = ClientToServer.newBuilder().setReconnect(reconnectProto).build();
-        clientStream.onNext(request);
-
-        // 3. Assertions
-        assertEquals(1, getPlayers(server).size(), "A new client should not have been added.");
-        // The observer in the map should be the one we passed to gameStream()
-        assertSame(fakeServerObserver, getPlayerObservers(server).get(existingPlayer.getUuid()), "The client's observer should be updated.");
-        assertNull(fakeServerObserver.getReceivedError());
-    }
-
-    @Test
-    void testPlayerReconnect_UnknownUuid_Rejected() {
-        ReconnectProto reconnectProto = ReconnectProto.newBuilder().setUuid("123e4567-e89b-12d3-a456-426614174000") // A random, unknown UUID
-            .build();
-        ClientToServer request = ClientToServer.newBuilder().setReconnect(reconnectProto).build();
-        clientStream.onNext(request);
-
-        assertTrue(getPlayers(server).isEmpty(), "Connection with unknown UUID should be rejected.");
-        assertNotNull(fakeServerObserver.getReceivedError());
-        assertTrue(fakeServerObserver.getReceivedError() instanceof StatusRuntimeException);
-        StatusRuntimeException exception = (StatusRuntimeException) fakeServerObserver.getReceivedError();
-        assertEquals(Status.NOT_FOUND.getCode(), exception.getStatus().getCode());
-    }
-
-    @Test
-    void testPlayerReconnect_InvalidUuid_Rejected() {
-        ReconnectProto reconnectProto = ReconnectProto.newBuilder().setUuid("not-a-valid-uuid").build();
-        ClientToServer request = ClientToServer.newBuilder().setReconnect(reconnectProto).build();
-        clientStream.onNext(request);
-        assertTrue(getPlayers(server).isEmpty(), "Connection with invalid UUID should be rejected.");
-        assertNotNull(fakeServerObserver.getReceivedError());
-        assertTrue(fakeServerObserver.getReceivedError() instanceof StatusRuntimeException);
-        StatusRuntimeException exception = (StatusRuntimeException) fakeServerObserver.getReceivedError();
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), exception.getStatus().getCode());
-    }
-
     @SuppressWarnings("unchecked")
     private List<PlayerConnection> getPlayers(Server server) {
         try {
@@ -177,11 +126,11 @@ class ServerTest {
     }
 
     @SuppressWarnings("unchecked")
-    private ConcurrentHashMap<UUID, StreamObserver<ServerToClient>> getPlayerObservers(Server server) {
+    private ConcurrentHashMap<Role, StreamObserver<ServerToClient>> getPlayerObservers(Server server) {
         try {
             java.lang.reflect.Field field = Server.class.getDeclaredField("playerObservers");
             field.setAccessible(true);
-            return (ConcurrentHashMap<UUID, StreamObserver<ServerToClient>>) field.get(server);
+            return (ConcurrentHashMap<Role, StreamObserver<ServerToClient>>) field.get(server);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             fail("Failed to get playerObservers field from Server", e);
             return null;

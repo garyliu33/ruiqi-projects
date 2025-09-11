@@ -21,10 +21,6 @@ message ClientDeclarationProto {
   optional RoleProto role = 2; 
 }
 
-message ReconnectProto {
-  string uuid = 1;
-}
-
 message ClientDeclarationResponseProto {
   enum Status {
     STATUS_UNSPECIFIED = 0;
@@ -34,5 +30,4 @@ message ClientDeclarationResponseProto {
 
   Status status = 1;
   optional RoleProto assigned_role = 2;
-  optional string uuid = 3;
 }
