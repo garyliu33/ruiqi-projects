@@ -1,8 +1,10 @@
 import com.google.protobuf.gradle.*
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id("java")
     id("com.google.protobuf") version "0.9.5"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 val grpcVersion = "1.75.0"
@@ -20,6 +22,7 @@ dependencies {
     implementation("io.grpc:grpc-netty-shaded:${grpcVersion}")
     implementation("io.grpc:grpc-stub:${grpcVersion}")
     implementation("io.grpc:grpc-protobuf:${grpcVersion}")
+    implementation("io.grpc:grpc-services:${grpcVersion}")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
@@ -46,13 +49,20 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.named<Jar>("jar") {
+tasks.named<ShadowJar>("shadowJar") {
     manifest {
         attributes["Main-Class"] = "com.st.client.ClientGUI"
     }
-    from(sourceSets.main.get().output)
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
-        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-    }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
+    archiveClassifier.set("") // Creates 'client-1.0.jar' instead of 'client-1.0-all.jar'
+}
+
+// Ensure the 'build' task depends on 'shadowJar'
+tasks.named("build") {
+    dependsOn(tasks.named("shadowJar"))
+}
+
+// Disable the standard 'jar' task to avoid creating a confusing, non-executable JAR
+tasks.named<Jar>("jar") {
+    enabled = false
 }
