@@ -4,8 +4,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.io.IOException;
-import java.util.Objects;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
@@ -17,8 +17,12 @@ public class CardBackView extends JPanel {
 
     static {
         try {
-            cardBackImage = ImageIO.read(Objects.requireNonNull(CardBackView.class.getResource("/cardback.jpg")));
-        } catch (IOException | IllegalArgumentException e) {
+            InputStream is = CardBackView.class.getResourceAsStream("/cardback.jpg");
+            if (is == null) {
+                throw new IOException("Resource not found: /cardback.jpg");
+            }
+            cardBackImage = ImageIO.read(is);
+        } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Failed to load card back image: " + e.getMessage());
             cardBackImage = null;
