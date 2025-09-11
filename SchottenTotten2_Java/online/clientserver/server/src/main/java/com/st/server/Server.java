@@ -105,6 +105,7 @@ public class Server extends SchottenTotten2ServiceImplBase {
                                 .setUuid(newPlayer.getUuid().toString())
                                 .build();
                         observer.onNext(ServerToClient.newBuilder().setDeclarationResponse(response).build());
+                        sendGameStateToPlayer(newPlayer.getUuid()); // Send initial (empty) state
                     }
                 } else { // WATCHER
                     System.out.println("Watcher connected.");
@@ -159,8 +160,6 @@ public class Server extends SchottenTotten2ServiceImplBase {
             gameController = new GameController();
             gameController.startGame();
             broadcastGameState();
-        } else {
-            sendGameStateToPlayer(newClient.getUuid()); // Send initial state to the first player
         }
         return newClient;
     }

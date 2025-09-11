@@ -17,7 +17,8 @@ public class Deck {
     public Deck(int size) {
         deck = new ArrayDeque<>(size);
         for (int i = 0; i < size; i++) {
-            deck.add(null); // Placeholder for client-side representation
+            // ArrayDeque does not support null elements. Use a placeholder.
+            deck.add(new Card(CardColor.ACTION_COLOR, -100));
         }
     }
 
