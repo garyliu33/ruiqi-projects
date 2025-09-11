@@ -4,9 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 
-import com.st.common.Card;
-import com.st.common.CardColor;
-import com.st.common.ClientMove;
 import com.st.proto.Card.CardProto;
 import com.st.proto.ClientMove.ClientMoveProto;
 

@@ -63,7 +63,7 @@ class GameStateTest {
         lastPlayedCard = new Card(CardColor.GRAY, 10);
 
         gameState = new GameState(
-                attackerHand, defenderHand, walls, deckSize, discard,
+                attackerHand, defenderHand, walls, new Deck(deckSize), discard,
                 isClientTurn, cauldronCount, usedCauldron, isClientAttacker,
                 winner, lastPlayedCard);
     }
@@ -74,7 +74,7 @@ class GameStateTest {
         assertEquals(attackerHand, gameState.getAttackerHand());
         assertEquals(defenderHand, gameState.getDefenderHand());
         assertArrayEquals(walls, gameState.getWalls());
-        assertEquals(deckSize, gameState.getDeckSize());
+        assertEquals(deckSize, gameState.getDeck().size());
         assertEquals(discard, gameState.getDiscard());
         assertEquals(isClientTurn, gameState.isClientTurn());
         assertEquals(cauldronCount, gameState.getCauldronCount());
@@ -146,7 +146,7 @@ class GameStateTest {
         GameState newGameState = GameState.fromProto(proto);
         
         // Verify that the new GameState object has the correct values
-        assertEquals(20, newGameState.getDeckSize());
+        assertEquals(20, newGameState.getDeck().size());
         assertFalse(newGameState.isClientTurn());
         assertEquals(1, newGameState.getCauldronCount());
         assertTrue(newGameState.hasUsedCauldron());

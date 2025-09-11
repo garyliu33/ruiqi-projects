@@ -45,8 +45,8 @@ class ServerTest {
         List<ServerToClient> messages = fakeServerObserver.getReceivedMessages();
         assertEquals(1, messages.size(), "Watcher should receive exactly one message.");
         assertTrue(messages.get(0).hasGameState(), "Message should be a game state update.");
-        // An empty/default GameState has 0 deck size and no winner.
-        assertEquals(0, messages.get(0).getGameState().getDeckSize());
+        // A new GameState initializes with a full deck.
+        assertEquals(60, messages.get(0).getGameState().getDeckSize());
 
         assertNull(fakeServerObserver.getReceivedError());
     }
@@ -67,14 +67,14 @@ class ServerTest {
         assertEquals(2, messages.size(), "Should receive declaration response and initial game state.");
 
         // 1. Check declaration response
+        assertTrue(messages.get(0).hasDeclarationResponse(), "First message should be a declaration response.");
         Participant.ClientDeclarationResponseProto response = messages.get(0).getDeclarationResponse();
         assertEquals(Participant.ClientDeclarationResponseProto.Status.SUCCESS, response.getStatus());
         assertEquals(Participant.RoleProto.ATTACKER_ROLE, response.getAssignedRole());
 
         // 2. Check initial game state (should be empty)
         assertTrue(messages.get(1).hasGameState(), "Second message should be a game state update.");
-        assertEquals(0, messages.get(1).getGameState().getDeckSize());
-
+        assertEquals(60, messages.get(1).getGameState().getDeckSize());
     }
 
     @Test

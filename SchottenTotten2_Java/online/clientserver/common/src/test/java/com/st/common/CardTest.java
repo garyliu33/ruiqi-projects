@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.Test;
 
-import com.st.common.Card;
-import com.st.common.CardColor;
 import com.st.proto.Card.CardProto;
 
 public class CardTest {

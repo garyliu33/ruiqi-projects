@@ -8,17 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.st.proto.Wall.WallProto;
-import com.st.common.Card;
-import com.st.common.CardColor;
-import com.st.common.PlayResult;
-import com.st.common.Wall;
-import com.st.common.WallPattern;
 import com.st.common.Wall.Status;
 
 public class WallTest {
@@ -33,7 +27,7 @@ public class WallTest {
 
     @BeforeEach
     public void setUp() {
-        wall = new Wall(0, 3, 2, WallPattern.RUN, WallPattern.COLOR);
+        wall = new Wall(0);
         red5 = new Card(CardColor.RED, 5);
         red6 = new Card(CardColor.RED, 6);
         blue5 = new Card(CardColor.BLUE, 5);
@@ -46,10 +40,10 @@ public class WallTest {
 
     @Test
     public void testWallCreationWithDefaultStatus() {
-        Wall newWall = new Wall(1, 5, 4, WallPattern.COLOR, WallPattern.PLUS);
+        Wall newWall = new Wall(1);
         assertEquals(1, newWall.getWallIndex());
-        assertEquals(5, newWall.getLength());
-        assertEquals(WallPattern.COLOR, newWall.getPattern());
+        assertEquals(4, newWall.getLength()); // Wall 1 has length 4
+        assertEquals(WallPattern.NONE, newWall.getPattern()); // Wall 1 has pattern NONE
         assertEquals(Status.INTACT, newWall.getStatus());
         assertTrue(newWall.getAttackerCards().isEmpty());
         assertTrue(newWall.getDefenderCards().isEmpty());
@@ -57,18 +51,18 @@ public class WallTest {
 
     @Test
     public void testWallCreationWithExplicitStatus() {
-        Wall newWall = new Wall(2, 5, 4, WallPattern.COLOR, WallPattern.PLUS, Status.DAMAGED);
+        Wall newWall = new Wall(2, Status.DAMAGED);
         assertEquals(2, newWall.getWallIndex());
-        assertEquals(4, newWall.getLength());
-        assertEquals(WallPattern.PLUS, newWall.getPattern());
+        assertEquals(3, newWall.getLength()); // Wall 2 damaged length is 3
+        assertEquals(WallPattern.COLOR, newWall.getPattern()); // Wall 2 damaged pattern is COLOR
         assertEquals(Status.DAMAGED, newWall.getStatus());
     }
 
     @Test
     public void testGetters() {
         assertEquals(0, wall.getWallIndex());
-        assertEquals(3, wall.getLength());
-        assertEquals(WallPattern.RUN, wall.getPattern());
+        assertEquals(3, wall.getLength()); // Wall 0 has length 3
+        assertEquals(WallPattern.PLUS, wall.getPattern()); // Wall 0 has pattern PLUS
         assertEquals(Status.INTACT, wall.getStatus());
     }
 
@@ -179,23 +173,25 @@ public class WallTest {
     @Test
     public void testDeclareControlAttackerWin() {
         // Attacker wins with a higher strength
-        Wall highStrengthWall = new Wall(0, 2, 2, WallPattern.COLOR, WallPattern.COLOR);
+        Wall highStrengthWall = new Wall(2); // Wall 2 has length 3
         highStrengthWall.playCard(new Card(CardColor.RED, 5), true);
         highStrengthWall.playCard(new Card(CardColor.RED, 6), true);
+        highStrengthWall.playCard(new Card(CardColor.RED, 7), true); // Attacker formation is now complete
 
         List<Card> defenderCards = new ArrayList<>();
         defenderCards.add(new Card(CardColor.BLUE, 1));
         defenderCards.add(new Card(CardColor.BLUE, 2));
+        defenderCards.add(new Card(CardColor.BLUE, 3));
         Set<Card> discarded = highStrengthWall.declareControl(defenderCards);
 
         assertEquals(Status.DAMAGED, highStrengthWall.getStatus());
-        assertEquals(2, discarded.size());
+        assertEquals(3, discarded.size());
     }
     
     @Test
     public void testDeclareControlAttackerFinishedFirstWin() {
         // Attacker wins with equal strength but finished first
-        Wall equalStrengthWall = new Wall(0, 2, 2, WallPattern.COLOR, WallPattern.COLOR);
+        Wall equalStrengthWall = new Wall(3); // Wall 3 has length 2
         equalStrengthWall.playCard(new Card(CardColor.RED, 5), true);
         equalStrengthWall.playCard(new Card(CardColor.RED, 6), true);
         // Play one card for defender to trigger attackerFinishedFirst
@@ -212,7 +208,7 @@ public class WallTest {
     @Test
     public void testDeclareControlDefenderWin() {
         // Defender wins with higher strength
-        Wall defenderWinWall = new Wall(0, 2, 2, WallPattern.COLOR, WallPattern.COLOR);
+        Wall defenderWinWall = new Wall(3); // Wall 3 has length 2
         defenderWinWall.playCard(new Card(CardColor.RED, 1), true);
         defenderWinWall.playCard(new Card(CardColor.RED, 2), true);
         
@@ -242,7 +238,7 @@ public class WallTest {
     @Test
     public void testDamageFromDamagedToBroken() {
         // Set the wall to a damaged state first
-        Wall damagedWall = new Wall(0, 3, 2, WallPattern.RUN, WallPattern.COLOR, Status.DAMAGED);
+        Wall damagedWall = new Wall(0, Status.DAMAGED);
         damagedWall.playCard(red5, true);
         damagedWall.playCard(blue6, false);
         
@@ -269,9 +265,10 @@ public class WallTest {
 
         assertEquals(wall.getWallIndex(), newWall.getWallIndex());
         assertEquals(wall.getStatus(), newWall.getStatus());
-        assertEquals(wall.getLength(), newWall.getLength());
-        assertEquals(wall.getPattern(), newWall.getPattern());
-        assertEquals(wall.getAttackerCards().size(), newWall.getAttackerCards().size());
-        assertEquals(wall.getDefenderCards().size(), newWall.getDefenderCards().size());
+        // After damage, cards are cleared.
+        assertEquals(0, newWall.getAttackerCards().size());
+        assertEquals(0, newWall.getDefenderCards().size());
+        assertTrue(wall.getAttackerCards().isEmpty());
+        assertTrue(wall.getDefenderCards().isEmpty());
     }
 }

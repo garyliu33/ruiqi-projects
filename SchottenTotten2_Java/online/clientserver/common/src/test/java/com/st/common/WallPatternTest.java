@@ -2,10 +2,8 @@ package com.st.common;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
-import com.st.common.WallPattern;
 import com.st.proto.Wall.WallPatternProto;
 
 public class WallPatternTest {

@@ -15,13 +15,8 @@ public class GameController {
     private Role currentTurn;
 
     public void startGame() {
-        Deck deck = new Deck();
-        deck.reset();
-        Wall[] walls = new Wall[Constants.NUM_WALLS];
-        for (int i = 0; i < Constants.NUM_WALLS; i++) {
-            walls[i] = new Wall(i);
-            walls[i].reset();
-        }
+        this.fullGameState = new GameState();
+        Deck deck = fullGameState.getDeck();
 
         Player attacker = new Player();
         Player defender = new Player();
@@ -29,20 +24,8 @@ public class GameController {
             attacker.draw(deck);
             defender.draw(deck);
         }
-
-        this.fullGameState = new GameState(
-                attacker.getHand().getCards(),
-                defender.getHand().getCards(),
-                walls,
-                deck,
-                new Discard().getCardsByColor(),
-                false, // isClientTurn (doesn't matter for full state)
-                defender.getCauldronCount(),
-                defender.hasUsedCauldron(),
-                false, // isClientAttacker (doesn't matter for full state)
-                Winner.NONE,
-                null
-        );
+        fullGameState.getAttackerHand().addAll(attacker.getHand().getCards());
+        fullGameState.getDefenderHand().addAll(defender.getHand().getCards());
         currentTurn = Role.ATTACKER; // Attacker always starts
     }
 
@@ -60,7 +43,7 @@ public class GameController {
         PlayResult result = walls[wallIndex].playCard(card, isAttacker);
 
         if (result.getResultType() == PlayResult.Type.SUCCESS) {
-            Set<Card> hand = isAttacker ? fullGameState.getHostHand() : fullGameState.getClientHand();
+            Set<Card> hand = isAttacker ? fullGameState.getAttackerHand() : fullGameState.getDefenderHand();
             hand.remove(card);
             Card drawnCard = fullGameState.getDeck().pop();
             if (drawnCard != null) {
@@ -76,7 +59,7 @@ public class GameController {
             currentTurn = (currentTurn == Role.ATTACKER) ? Role.DEFENDER : Role.ATTACKER;
 
             fullGameState = new GameState(
-                    fullGameState.getHostHand(), fullGameState.getClientHand(), fullGameState.getWalls(),
+                    fullGameState.getAttackerHand(), fullGameState.getDefenderHand(), fullGameState.getWalls(),
                     fullGameState.getDeck(), fullGameState.getDiscard(), false,
                     fullGameState.getCauldronCount(), false, // Reset usedCauldron
                     false, getWinner(), card
@@ -88,7 +71,7 @@ public class GameController {
             int cauldronCount = fullGameState.getCauldronCount() - (usedCauldron ? 1 : 0);
 
             fullGameState = new GameState(
-                    fullGameState.getHostHand(), fullGameState.getClientHand(), fullGameState.getWalls(),
+                    fullGameState.getAttackerHand(), fullGameState.getDefenderHand(), fullGameState.getWalls(),
                     fullGameState.getDeck(), fullGameState.getDiscard(), false,
                     cauldronCount, usedCauldron, false, getWinner(), card
             );
@@ -97,7 +80,7 @@ public class GameController {
 
     private void declareControl() {
         List<Card> remainingCards = new ArrayList<>();
-        Set<Card> discardedOrOnBoard = fullGameState.getDiscardedCards();
+        Set<Card> discardedOrOnBoard = fullGameState.getDiscard().values().stream().flatMap(List::stream).collect(java.util.stream.Collectors.toSet());
         for (Wall wall : fullGameState.getWalls()) {
             for (Card card : wall.getAttackerCards()) discardedOrOnBoard.add(card);
             for (Card card : wall.getDefenderCards()) discardedOrOnBoard.add(card);
@@ -116,8 +99,8 @@ public class GameController {
 
     public GameState createGameStateForPlayer(Role playerRole) {
         boolean isAttacker = playerRole == Role.ATTACKER;
-        Set<Card> hostHand = isAttacker ? fullGameState.getHostHand() : fullGameState.getClientHand();
-        Set<Card> clientHand = isAttacker ? fullGameState.getClientHand() : fullGameState.getHostHand();
+        Set<Card> hostHand = isAttacker ? fullGameState.getAttackerHand() : fullGameState.getDefenderHand();
+        Set<Card> clientHand = isAttacker ? fullGameState.getAttackerHand() : fullGameState.getDefenderHand();
 
         return new GameState(
                 hostHand, clientHand, fullGameState.getWalls(),

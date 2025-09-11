@@ -11,6 +11,11 @@ import com.st.proto.Wall.StatusProto;
 import com.st.proto.Wall.WallProto;
 
 public class Wall {
+    private static final int[] WALL_LENGTHS = {3, 4, 3, 2, 3, 4, 3};
+    private static final int[] DAMAGED_WALL_LENGTHS = {3, 2, 3, 4, 3, 2, 3};
+    private static final WallPattern[] WALL_PATTERNS = {WallPattern.PLUS, WallPattern.NONE, WallPattern.NONE, WallPattern.NONE, WallPattern.NONE, WallPattern.NONE, WallPattern.MINUS};
+    private static final WallPattern[] DAMAGED_WALL_PATTERNS = {WallPattern.RUN, WallPattern.EQUALS, WallPattern.COLOR, WallPattern.MINUS, WallPattern.COLOR, WallPattern.EQUALS, WallPattern.RUN};
+
     private final int wallIndex;
     private Status status;
 
@@ -89,11 +94,11 @@ public class Wall {
     }
 
     public WallPattern getPattern() {
-        return status == Status.INTACT ? Constants.WALL_PATTERNS[wallIndex] : Constants.DAMAGED_WALL_PATTERNS[wallIndex];
+        return status == Status.INTACT ? WALL_PATTERNS[wallIndex] : DAMAGED_WALL_PATTERNS[wallIndex];
     }
 
     public int getLength() {
-        return status == Status.INTACT ? Constants.WALL_LENGTHS[wallIndex] : Constants.DAMAGED_WALL_LENGTHS[wallIndex];
+        return status == Status.INTACT ? WALL_LENGTHS[wallIndex] : DAMAGED_WALL_LENGTHS[wallIndex];
     }
 
     public int getWallIndex() {
@@ -261,10 +266,10 @@ public class Wall {
         WallProto.Builder builder = WallProto.newBuilder();
         builder.setWallIndex(wallIndex);
         builder.setStatus(status.toProto());
-        builder.setIntactLength(intactLength);
-        builder.setDamagedLength(damagedLength);
-        builder.setIntactPattern(intactPattern.toProto());
-        builder.setDamagedPattern(damagedPattern.toProto());
+        builder.setIntactLength(WALL_LENGTHS[wallIndex]);
+        builder.setDamagedLength(DAMAGED_WALL_LENGTHS[wallIndex]);
+        builder.setIntactPattern(WALL_PATTERNS[wallIndex].toProto());
+        builder.setDamagedPattern(DAMAGED_WALL_PATTERNS[wallIndex].toProto());
         for (Card c : attackerCards) {
             builder.addAttackerCards(c.toProto());
         }

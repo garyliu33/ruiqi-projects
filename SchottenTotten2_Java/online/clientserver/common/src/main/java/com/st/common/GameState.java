@@ -23,6 +23,27 @@ public class GameState {
     private final Winner winner;
     private final Card lastPlayedCard;
 
+    /**
+     * Default constructor to initialize a new game from scratch.
+     */
+    public GameState() {
+        this.attackerHand = new TreeSet<>();
+        this.defenderHand = new TreeSet<>();
+        this.walls = new Wall[Constants.NUM_WALLS];
+        for (int i = 0; i < Constants.NUM_WALLS; i++) {
+            this.walls[i] = new Wall(i);
+        }
+        this.deck = new Deck();
+        this.deck.shuffle();
+        this.discard = new TreeMap<>();
+        this.isClientTurn = false; // Not relevant for server-side full state
+        this.cauldronCount = Constants.NUM_CAULDRONS;
+        this.usedCauldron = false;
+        this.isClientAttacker = false; // Not relevant for server-side full state
+        this.winner = Winner.NONE;
+        this.lastPlayedCard = null;
+    }
+
     public GameState(Set<Card> attackerHand, Set<Card> defenderHand, Wall[] walls, Deck deck,
             Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount,
             boolean usedCauldron, boolean isClientAttacker, Winner winner, Card lastPlayedCard) {
@@ -94,6 +115,8 @@ public class GameState {
         for (Wall w : walls) {
             builder.addWalls(w.toProto());
         }
+        // For client-side, we only send the size.
+        // A more robust implementation might have a separate toClientProto() method.
         builder.setDeckSize(deck.size());
         for (CardColor c : discard.keySet()) {
             List<Card> cards = discard.get(c);

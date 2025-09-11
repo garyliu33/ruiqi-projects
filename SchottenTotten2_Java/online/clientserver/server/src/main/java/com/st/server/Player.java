@@ -2,6 +2,7 @@ package com.st.server;
 
 import com.st.common.Card;
 import com.st.common.Constants;
+import com.st.common.Deck;
 
 public class Player {
     protected Hand hand;
