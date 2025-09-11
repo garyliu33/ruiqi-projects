@@ -50,7 +50,7 @@ public class ClientGUI {
                 hostIP = "localhost";
             }
             try {
-                channel = ManagedChannelBuilder.forAddress(hostIP, 12345)
+                channel = ManagedChannelBuilder.forTarget("dns:///"+hostIP+":12345")
                         .usePlaintext()
                         .build();
                 break;
