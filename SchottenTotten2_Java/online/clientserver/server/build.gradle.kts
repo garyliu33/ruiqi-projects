@@ -5,7 +5,7 @@ plugins {
     id("com.google.protobuf") version "0.9.5"
 }
 
-val grpcVersion = "1.65.0"
+val grpcVersion = "1.75.0"
 
 group = "com.st"
 version = "1.0"
@@ -44,4 +44,15 @@ protobuf {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.named<Jar>("jar") {
+    manifest {
+        attributes["Main-Class"] = "com.st.server.Server"
+    }
+    from(sourceSets.main.get().output)
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
