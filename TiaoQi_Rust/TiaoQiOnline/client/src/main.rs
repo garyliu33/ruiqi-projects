@@ -5,7 +5,7 @@ use std::sync::RwLock;
 use macroquad::prelude::*;
 use common::server_message::ServerMessage;
 use crate::board_view::BoardView;
-use crate::display_assets::{DisplayConstants, DISPLAY_CONSTANTS};
+use crate::display_assets::*;
 
 mod display_assets;
 mod cell_view;
