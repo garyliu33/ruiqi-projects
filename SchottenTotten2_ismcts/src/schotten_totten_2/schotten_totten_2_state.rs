@@ -20,6 +20,7 @@ pub struct SchottenTotten2State {
     pub player_to_move_index: usize,
     pub attacker_damaged_tiles: u8,
     pub is_client_turn: bool,
+    pub last_played_card: Option<Card>,
 }
 
 impl SchottenTotten2State {
@@ -74,6 +75,9 @@ impl SchottenTotten2State {
             player_to_move_index: player_to_move,
             attacker_damaged_tiles: damaged_tile_count,
             is_client_turn: proto.is_client_turn,
+            last_played_card: proto
+                .last_played_card
+                .map(|card_proto| Card::from_proto(&card_proto)),
         }
     }
 
@@ -89,7 +93,7 @@ impl SchottenTotten2State {
         if played_card.value != 0 && played_card.value != 11 {
             return None;
         }
-        let expected_opp_value = if played_card.value == 0 { 11_u8 } else { 0_u8 };
+        let expected_opp_value = if played_card.value == 0 { 11_i8 } else { 0_i8 };
 
         if let Some(opp_card) = opponent_cards
             .iter()
@@ -402,7 +406,13 @@ impl GameState<SchottenTotten2Move> for SchottenTotten2State {
         }
 
         // Defender-specific moves.
-        if current_player.role == Role::Defender && current_player.oil_cauldrons > 0 {
+        if current_player.role == Role::Defender
+            && current_player.oil_cauldrons > 0
+            && !self
+                .last_played_card
+                .map(|card| card.color == Color::ACTION && card.value == -2)
+                .unwrap_or(false)
+        {
             for (i, tile) in self.wall_tiles.iter().enumerate() {
                 if !tile.attacker_cards.is_empty() {
                     moves.push(SchottenTotten2Move::ThrowOilCauldron { tile_index: i });
@@ -571,6 +581,7 @@ impl SchottenTotten2State {
             player_to_move_index: 0,
             attacker_damaged_tiles: 0,
             is_client_turn: false,
+            last_played_card: None,
         }
     }
 }
@@ -1327,5 +1338,36 @@ mod tests {
 
         let result = state.check_attacker_control(tile_index);
         assert!(!result);
+    }
+
+    #[test]
+    fn test_get_moves_defender_cant_throw_oil_after_spy_move() {
+        let mut state = setup_game_state();
+        state.player_to_move_index = 1; // Defender's turn
+        state.players[1].oil_cauldrons = 1;
+
+        // Set the last played card to be the "Spy" card
+        state.last_played_card = Some(Card {
+            color: Color::ACTION,
+            value: -2,
+        });
+
+        // Place an attacker card on a tile to make it a potential target for the oil cauldron
+        let tile_index = 0;
+        state.wall_tiles[tile_index].attacker_cards.push(Card {
+            value: 5,
+            color: Color::Red,
+        });
+        state.deck.drain(0..1);
+
+        let moves = state.get_moves();
+
+        // The defender should not be able to throw an oil cauldron because the last card played was a "Spy" card
+        let actual_oil_cauldron_moves = moves
+            .iter()
+            .filter(|m| matches!(m, SchottenTotten2Move::ThrowOilCauldron { .. }))
+            .count();
+
+        assert_eq!(actual_oil_cauldron_moves, 0);
     }
 }

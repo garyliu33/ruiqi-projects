@@ -9,11 +9,12 @@ pub enum Color {
     Yellow,
     Green,
     Gray,
+    ACTION,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Card {
-    pub value: u8,
+    pub value: i8,
     pub color: Color,
 }
 
@@ -25,6 +26,7 @@ impl Card {
             Color::Yellow => com_st_proto::ColorProto::Yellow.into(),
             Color::Green => com_st_proto::ColorProto::Green.into(),
             Color::Gray => com_st_proto::ColorProto::Gray.into(),
+            Color::ACTION => com_st_proto::ColorProto::Action.into(),
         };
         com_st_proto::CardProto {
             color: Some(color),
@@ -38,31 +40,37 @@ impl Card {
                 Ok(com_st_proto::ColorProto::Red) => {
                     return Card {
                         color: Color::Red,
-                        value: value as u8,
+                        value: value as i8,
                     };
                 }
                 Ok(com_st_proto::ColorProto::Blue) => {
                     return Card {
                         color: Color::Blue,
-                        value: value as u8,
+                        value: value as i8,
                     };
                 }
                 Ok(com_st_proto::ColorProto::Yellow) => {
                     return Card {
                         color: Color::Yellow,
-                        value: value as u8,
+                        value: value as i8,
                     };
                 }
                 Ok(com_st_proto::ColorProto::Green) => {
                     return Card {
                         color: Color::Green,
-                        value: value as u8,
+                        value: value as i8,
                     };
                 }
                 Ok(com_st_proto::ColorProto::Gray) => {
                     return Card {
                         color: Color::Gray,
-                        value: value as u8,
+                        value: value as i8,
+                    };
+                }
+                Ok(com_st_proto::ColorProto::Action) => {
+                    return Card {
+                        color: Color::ACTION,
+                        value: value as i8,
                     };
                 }
                 _ => panic!("Unknown color"),
