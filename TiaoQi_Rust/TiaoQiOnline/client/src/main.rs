@@ -3,7 +3,8 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 use std::sync::RwLock;
 use macroquad::prelude::*;
-use common::server_message::ServerMessage;
+use common::client_message::ClientMessage;
+use common::server_message::{Info, ServerMessage};
 use crate::board_view::BoardView;
 use crate::display_assets::*;
 
@@ -33,7 +34,7 @@ enum AppState {
     InGame {
         stream: TcpStream,
         reader: BufReader<TcpStream>,
-        board: Option<BoardView>,
+        board: Option<BoardView>
     },
     GameOver {
         board: BoardView,
@@ -50,6 +51,7 @@ async fn main() {
         ip_string: String::new(),
         error_msg: None,
     };
+    let mut info = None;
 
     loop {
         let mut update_constants = false;
@@ -97,7 +99,7 @@ async fn main() {
                 let btn_color = if mouse_over_button { GREEN } else { LIME };
 
                 draw_rectangle(btn_x, btn_y, btn_width, btn_height, btn_color);
-                draw_text("Connect", btn_x + 25.0, btn_y + 35.0, font_size, WHITE);
+                display_text("CONNECT", btn_x + btn_width / 2.0, btn_y + btn_height / 2.0, font_size, WHITE);
 
                 if let Some(msg) = error_msg {
                     let err_dims = measure_text(msg, None, 20, 1.0);
@@ -145,6 +147,9 @@ async fn main() {
                         if !buffer.trim().is_empty() {
                             let server_message: ServerMessage = serde_json::from_str(&buffer).unwrap();
                             match server_message {
+                                ServerMessage::Info(initial_info) => {
+                                    info = Some(initial_info);
+                                }
                                 ServerMessage::GameState(game_state) => {
                                     let current_board = board.get_or_insert_with(|| BoardView::new(game_state.rotation, game_state.ids.clone()));
                                     current_board.update_board(&game_state)
@@ -188,6 +193,45 @@ async fn main() {
                                 };
                                 continue;
                             }
+                        }
+                    }
+                } else {
+                    if let Some(i) = info.clone() {
+                        let font_size = 40.0;
+                        if i.your_id == 0 {
+                            display_text(&*format!("{} players connected", i.num_players), screen_width() / 2.0, screen_height() / 2.0 - 60.0, font_size, WHITE);
+
+                            let btn_width = 150.0;
+                            let btn_height = 50.0;
+                            let btn_x = screen_width() / 2.0 - btn_width / 2.0;
+                            let btn_y = screen_height() / 2.0 - btn_height / 2.0;
+                            let btn_rect = Rect::new(btn_x, btn_y, btn_width, btn_height);
+
+                            let (mouse_x, mouse_y) = mouse_position();
+                            let mouse_over_button = btn_rect.contains(vec2(mouse_x, mouse_y));
+                            let btn_color = if mouse_over_button { GREEN } else { LIME };
+
+                            draw_rectangle(btn_x, btn_y, btn_width, btn_height, btn_color);
+                            display_text("START", btn_x + btn_width / 2.0, btn_y + btn_height / 2.0, font_size, WHITE);
+
+                            if mouse_over_button && is_mouse_button_pressed(MouseButton::Left) {
+                                let json = serde_json::to_string(&ClientMessage::StartGame).unwrap();
+                                println!("sending start game json");
+                                if writeln!(stream, "{}", json).is_err() {
+                                    state = AppState::EnterIp {
+                                        ip_string: String::new(),
+                                        error_msg: Some("Failed to send message. Disconnected.".to_string()),
+                                    };
+                                    continue;
+                                }
+                            }
+
+                            if let Some(msg) = i.msg {
+                                display_text(&*msg, screen_width() / 2.0, screen_height() / 2.0 + 60.0, 25.0, RED);
+                            }
+                        } else {
+                            display_text(&*format!("{} player{} connected", i.num_players, if i.num_players == 1 {""} else {"s"}), screen_width() / 2.0, screen_height() / 2.0 - 30.0, font_size, WHITE);
+                            display_text("Waiting for host to start...", screen_width() / 2.0, screen_height() / 2.0 + 30.0, font_size, WHITE);
                         }
                     }
                 }

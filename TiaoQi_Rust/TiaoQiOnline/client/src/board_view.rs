@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use common::client_move::ClientMove;
+use common::client_message::{ClientMessage};
 use crate::cell_view::CellView;
 use crate::display_assets::*;
 use common::piece_color::PieceColor;
@@ -82,9 +82,9 @@ impl BoardView {
         draw_text(&msg, (screen_width() - text_dims.width) / 2.0, (screen_height() + text_dims.height) / 2.0, font_size, WHITE);
     }
 
-    pub fn handle_click(&self) -> Option<ClientMove> {
+    pub fn handle_click(&self) -> Option<ClientMessage> {
         if let Some(clicked) = self.get_hovered_cell() {
-            Some(ClientMove::new(clicked))
+            Some(ClientMessage::ClientMove(clicked))
         } else {
             None
         }

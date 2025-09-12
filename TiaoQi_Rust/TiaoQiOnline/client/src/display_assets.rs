@@ -1,8 +1,9 @@
 use std::f32::consts::PI;
 use std::sync::{OnceLock, RwLock};
-use macroquad::color::Color;
+use macroquad::color::{Color, WHITE};
 use macroquad::math::{vec2, Vec2};
 use macroquad::models::{Mesh, Vertex};
+use macroquad::prelude::{draw_text, measure_text, screen_height, screen_width};
 
 pub const R3: f32 = 1.73205080757;
 
@@ -93,4 +94,9 @@ pub fn rotate(p: Vec2, deg: f32) -> Vec2 {
     let sin = rad.sin();
     let cos = rad.cos();
     vec2(p.x * cos - p.y * sin, p.x * sin + p.y * cos)
+}
+
+pub fn display_text(text: &str, x: f32, y: f32, font_size: f32, color: Color) {
+    let text_dims = measure_text(text, None, font_size as u16, 1.0);
+    draw_text(text, x - text_dims.width / 2.0, y + text_dims.height / 2.0, font_size, color);
 }

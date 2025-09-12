@@ -1,8 +1,9 @@
 use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
+use common::client_message::ClientMessage;
 use common::piece_color::PieceColor;
-use common::server_message::ClientGameState;
+use common::server_message::{ClientGameState, Info};
 use crate::board::Board;
 use crate::network::Network;
 
@@ -41,7 +42,7 @@ impl GameController {
             if self.network.player_streams[id].is_some() {
                 sent_disconnect_message = false;
                 if let Some(client_move) = self.network.wait_for_move(self.current_turn) {
-                    self.handle_click(client_move.cell);
+                    self.handle_click(client_move);
                 }
             } else {
                 if !sent_disconnect_message {
@@ -127,6 +128,6 @@ impl GameController {
             None => None
         };
         
-        ClientGameState::new(cells, self.get_clickable_cells(), self.selected_piece, previous_move_path, self.current_turn == id, self.ids[id] as f32 * 60.0, self.ids.clone())
+        ClientGameState::new(cells, self.get_clickable_cells(), self.selected_piece, previous_move_path, self.current_turn == id, self.ids.clone(), self.ids[id] as f32 * 60.0)
     }
 }
