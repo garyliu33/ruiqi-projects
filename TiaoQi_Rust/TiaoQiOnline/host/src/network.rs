@@ -29,10 +29,10 @@ impl Network {
             "127.0.0.1".parse::<std::net::IpAddr>().unwrap()
         });
 
-        let listener = TcpListener::bind("0.0.0.0:4000")?;
+        let listener = TcpListener::bind("0.0.0.0:12345")?;
         listener.set_nonblocking(true)?;
 
-        println!("✅ Server started! Host IP: {ip}:4000");
+        println!("✅ Server started! Host IP: {ip}:12345");
         println!("Waiting for players to connect...");
 
         let mut player_streams = Vec::with_capacity(6);

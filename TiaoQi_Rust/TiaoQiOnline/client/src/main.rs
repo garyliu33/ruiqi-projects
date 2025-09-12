@@ -116,7 +116,7 @@ async fn main() {
             AppState::Connecting { ip } => {
                 draw_text(&format!("Connecting to {}...", ip.trim()), 20.0, 20.0, 30.0, WHITE);
 
-                match TcpStream::connect(format!("{}:4000", ip.trim())) {
+                match TcpStream::connect(format!("{}:12345", ip.trim())) {
                     Ok(stream) => {
                         stream.set_nonblocking(true).expect("Failed to set stream to non-blocking");
                         let reader = BufReader::new(stream.try_clone().unwrap());
