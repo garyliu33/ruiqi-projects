@@ -1,9 +1,6 @@
 use std::f32::consts::PI;
 use std::sync::{OnceLock, RwLock};
-use macroquad::color::{Color, WHITE};
-use macroquad::math::{vec2, Vec2};
-use macroquad::models::{Mesh, Vertex};
-use macroquad::prelude::{draw_text, measure_text, screen_height, screen_width};
+use macroquad::prelude::*;
 
 pub const R3: f32 = 1.73205080757;
 

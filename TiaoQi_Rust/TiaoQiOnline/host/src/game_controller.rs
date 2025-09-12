@@ -1,9 +1,8 @@
 use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
-use common::client_message::ClientMessage;
 use common::piece_color::PieceColor;
-use common::server_message::{ClientGameState, Info};
+use common::server_message::ClientGameState;
 use crate::board::Board;
 use crate::network::Network;
 

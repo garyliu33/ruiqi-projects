@@ -145,14 +145,6 @@ impl Network {
         }
     }
 
-    pub fn check_for_start_command(&mut self) -> bool {
-        if let (Some(message), _) = self.receive_message(0) {
-            matches!(message, ClientMessage::StartGame)
-        } else {
-            false
-        }
-    }
-
     /// Waits for a move from a specific player.
     /// Returns `None` if the player disconnects instead of sending a move.
     pub fn wait_for_move(&mut self, player_index: usize) -> Option<usize> {

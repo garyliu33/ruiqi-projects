@@ -4,7 +4,7 @@ use std::net::TcpStream;
 use std::sync::RwLock;
 use macroquad::prelude::*;
 use common::client_message::ClientMessage;
-use common::server_message::{Info, ServerMessage};
+use common::server_message::ServerMessage;
 use crate::board_view::BoardView;
 use crate::display_assets::*;
 
