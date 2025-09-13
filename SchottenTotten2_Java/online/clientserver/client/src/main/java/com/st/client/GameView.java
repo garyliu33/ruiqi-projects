@@ -16,7 +16,6 @@ public class GameView extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.gameState = gameState;
         updateLayout(onWallClicked);
-
     }
 
     public Card getSelectedCard() {

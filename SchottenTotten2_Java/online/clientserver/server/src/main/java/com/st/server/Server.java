@@ -119,14 +119,6 @@ public class Server extends SchottenTotten2ServiceImplBase {
         System.out.println("Player connected as " + assignedRole);
         players.add(newClient);
         playerObservers.put(newClient.getRole(), responseObserver);
-
-        // If both players are now connected, start the game.
-        if (players.size() == 2) {
-            System.out.println("Both players connected. Starting game.");
-            gameController = new GameController();
-            gameController.startGame();
-            broadcastGameState();
-        }
         return newClient;
     }
 
@@ -147,14 +139,12 @@ public class Server extends SchottenTotten2ServiceImplBase {
         if (observer == null) return;
 
         ServerToClient update;
-        if (gameController != null) {
-            GameState state = gameController.createGameStateForPlayer(playerRole);
-            update = ServerToClient.newBuilder().setGameState(state.toProto()).build();
-        } else {
-            // Game hasn't started, send an empty state.
-            GameState emptyState = new GameState();
-            update = ServerToClient.newBuilder().setGameState(emptyState.toProto()).build();
+        if (gameController == null) {
+            gameController = new GameController();
+            gameController.startGame();
         }
+        GameState state = gameController.createGameStateForPlayer(playerRole);
+        update = ServerToClient.newBuilder().setGameState(state.toProto()).build();
         observer.onNext(update);
     }
 

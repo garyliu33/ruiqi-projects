@@ -1,5 +1,6 @@
 package com.st.server;
 
+import com.st.common.GameState;
 import com.st.common.Role;
 import com.st.proto.GameService.ClientToServer;
 import com.st.proto.GameService.ServerToClient;
@@ -70,7 +71,12 @@ class ServerTest {
 
         // 2. Check initial game state (should be empty)
         assertTrue(messages.get(1).hasGameState(), "Second message should be a game state update.");
-        assertEquals(60, messages.get(1).getGameState().getDeckSize());
+        GameState gameState = GameState.fromProto(messages.get(1).getGameState());
+        assertEquals(48, gameState.getDeck().size());
+        assertEquals(6, gameState.getAttackerHand().size());
+        assertEquals(6, gameState.getDefenderHand().size());
+        assertTrue(gameState.isClientTurn());
+        assertTrue(gameState.isClientAttacker());
     }
 
     @Test

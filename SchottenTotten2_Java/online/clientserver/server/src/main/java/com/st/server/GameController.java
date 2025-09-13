@@ -105,8 +105,8 @@ public class GameController {
         return new GameState(
                 hostHand, clientHand, fullGameState.getWalls(),
                 fullGameState.getDeck(), fullGameState.getDiscard(),
-                currentTurn != playerRole, fullGameState.getCauldronCount(),
-                fullGameState.hasUsedCauldron(), !isAttacker,
+                currentTurn == playerRole, fullGameState.getCauldronCount(),
+                fullGameState.hasUsedCauldron(), isAttacker,
                 fullGameState.getWinner(), fullGameState.getLastPlayedCard());
     }
 
