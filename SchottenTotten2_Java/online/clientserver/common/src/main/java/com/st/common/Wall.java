@@ -105,15 +105,23 @@ public class Wall {
         return wallIndex;
     }
 
-    public PlayResult playCard(Card card, boolean isAttacker) {
+    public PlayResult playCard(Card card, boolean isAttacker, boolean hasRemainingCauldron) {
         if (card.equals(Card.RETREAT)) {
+            if (!isAttacker) {
+                System.out.println("Defender can not retreat cards");
+                return new PlayResult(PlayResult.Type.FAILURE, new ArrayList<>());
+            }
             List<Card> toDiscard = new ArrayList<>(attackerCards);
             attackerCards.clear();
             return new PlayResult(PlayResult.Type.ACTION, toDiscard);
         }
 
         if (card.equals(Card.CAULDRON)) {
-            if (!attackerCards.isEmpty()) {
+            if (isAttacker) {
+                System.out.println("Attacker can not use cauldron");
+                return new PlayResult(PlayResult.Type.FAILURE, new ArrayList<>());
+            }
+            if (!attackerCards.isEmpty() && hasRemainingCauldron) {
                 List<Card> toDiscard = List.of(attackerCards.removeLast());
                 attackerFinishedFirst = false;
                 return new PlayResult(PlayResult.Type.ACTION, toDiscard);

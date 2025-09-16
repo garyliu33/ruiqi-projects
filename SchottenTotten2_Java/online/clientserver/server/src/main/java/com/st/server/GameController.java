@@ -40,7 +40,7 @@ public class GameController {
         boolean isAttacker = playerRole == Role.ATTACKER;
 
         Wall[] walls = fullGameState.getWalls();
-        PlayResult result = walls[wallIndex].playCard(card, isAttacker);
+        PlayResult result = walls[wallIndex].playCard(card, isAttacker, fullGameState.getCauldronCount() > 0);
 
         if (result.getResultType() == PlayResult.Type.SUCCESS) {
             Set<Card> hand = isAttacker ? fullGameState.getAttackerHand() : fullGameState.getDefenderHand();
@@ -50,7 +50,6 @@ public class GameController {
                 hand.add(drawnCard);
             }
 
-            fullGameState.getDiscard().values().stream().flatMap(List::stream).close();
             result.getToDiscard().forEach(c -> fullGameState.getDiscard().get(c.getColor()).add(c));
 
             declareControl();
@@ -67,14 +66,23 @@ public class GameController {
 
         } else if (result.getResultType() == PlayResult.Type.ACTION) {
             result.getToDiscard().forEach(c -> fullGameState.getDiscard().get(c.getColor()).add(c));
-            boolean usedCauldron = !isAttacker;
-            int cauldronCount = fullGameState.getCauldronCount() - (usedCauldron ? 1 : 0);
-
+            if (isAttacker) {
+                // Retreat
             fullGameState = new GameState(
                     fullGameState.getAttackerHand(), fullGameState.getDefenderHand(), fullGameState.getWalls(),
                     fullGameState.getDeck(), fullGameState.getDiscard(), false,
-                    cauldronCount, usedCauldron, false, getWinner(), card
+                    fullGameState.getCauldronCount(), false, false, getWinner(), card
             );
+            } else {
+                // Use cauldron
+                int cauldronCount = fullGameState.getCauldronCount() - 1;
+            fullGameState = new GameState(
+                    fullGameState.getAttackerHand(), fullGameState.getDefenderHand(), fullGameState.getWalls(),
+                    fullGameState.getDeck(), fullGameState.getDiscard(), false,
+                    cauldronCount, true, false, getWinner(), card
+            );
+            }
+
         }
     }
 
@@ -116,9 +124,16 @@ public class GameController {
 
     private Winner getWinner() {
         int numDamaged = 0;
+        boolean areAllWallsFull = true;
         for (Wall wall : fullGameState.getWalls()) {
             if (wall.getStatus() == Wall.Status.BROKEN) return Winner.ATTACKER;
             if (wall.getStatus() == Wall.Status.DAMAGED) numDamaged++;
+            if (wall.getDefenderCards().size() < wall.getLength()) {
+                areAllWallsFull = false;
+            }
+        }
+        if (fullGameState.getDeck().size() == 0 || areAllWallsFull) {
+            return Winner.DEFENDER;
         }
         return numDamaged >= 4 ? Winner.ATTACKER : Winner.NONE;
     }

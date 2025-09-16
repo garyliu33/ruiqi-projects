@@ -43,7 +43,7 @@ class ServerTest {
         assertEquals(1, messages.size(), "Watcher should receive exactly one message.");
         assertTrue(messages.get(0).hasGameState(), "Message should be a game state update.");
         // A new GameState initializes with a full deck.
-        assertEquals(60, messages.get(0).getGameState().getDeckSize());
+        assertEquals(48, messages.get(0).getGameState().getDeckSize());
 
         assertNull(fakeServerObserver.getReceivedError());
     }

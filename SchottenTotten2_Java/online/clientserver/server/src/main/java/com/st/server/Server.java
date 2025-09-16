@@ -26,15 +26,17 @@ public class Server extends SchottenTotten2ServiceImplBase {
     // This map will store the stream observers for connected players, keyed by their Role.
     // This allows us to send game state updates to the correct player.
     private final ConcurrentHashMap<Role, StreamObserver<ServerToClient>> playerObservers = new ConcurrentHashMap<>();
-    private GameController gameController;
+    private final GameController gameController;
+
+    public Server() {
+        gameController = new GameController();
+        gameController.startGame();
+    }
 
     @Override
     public StreamObserver<ClientToServer> gameStream(StreamObserver<ServerToClient> responseObserver) {
         return new StreamObserver<>() {
             private Role clientRole = null; // To identify which player this stream belongs to
-
-            // Find the player associated with this stream.
-            private PlayerConnection getPlayer() { return findPlayerByRole(clientRole); }
 
             @Override
             public void onNext(ClientToServer request) {
@@ -44,11 +46,10 @@ public class Server extends SchottenTotten2ServiceImplBase {
                         break;
                     case MOVE:
                         if (gameController != null) {
-                            PlayerConnection player = getPlayer();
-                            if (player != null) {
-                                gameController.processMove(ClientMove.fromProto(request.getMove()), player.getRole());
-                                broadcastGameState();
-                            }
+                            Role moveRole = Role.fromProto(request.getMove().getRole());
+                            assert clientRole == moveRole : "Client role mismatch! Stream role: " + clientRole + ", Move role: " + moveRole;
+                            gameController.processMove(ClientMove.fromProto(request.getMove()), moveRole);
+                            broadcastGameState();
                         }
                         break;
                     case MESSAGE_NOT_SET:
@@ -60,6 +61,7 @@ public class Server extends SchottenTotten2ServiceImplBase {
             @Override
             public void onError(Throwable t) {
                 System.out.println("Client stream error: " + t.getMessage());
+                t.printStackTrace();
                 cleanupObserver(responseObserver, clientRole);
             }
 
@@ -131,39 +133,24 @@ public class Server extends SchottenTotten2ServiceImplBase {
         watchers.remove(responseObserver);
     }
 
-    private PlayerConnection findPlayerByRole(Role role) {
-        return players.stream().filter(p -> p.getRole() == role).findFirst().orElse(null);    }
-
     private void sendGameStateToPlayer(Role playerRole) {
         StreamObserver<ServerToClient> observer = playerObservers.get(playerRole);
-        if (observer == null) return;
+        assert observer != null : "Observer is null";
 
-        ServerToClient update;
-        if (gameController == null) {
-            gameController = new GameController();
-            gameController.startGame();
-        }
         GameState state = gameController.createGameStateForPlayer(playerRole);
-        update = ServerToClient.newBuilder().setGameState(state.toProto()).build();
+        // System.out.println("Send game state: " + state + " to player: " + playerRole);
+        ServerToClient update = ServerToClient.newBuilder().setGameState(state.toProto()).build();
         observer.onNext(update);
     }
 
     private void sendGameStateToObserver(StreamObserver<ServerToClient> observer) {
         ServerToClient update;
-        if (gameController != null) {
-            // Watchers get the full, unobfuscated game state.
-            update = ServerToClient.newBuilder().setGameState(gameController.getFullGameState().toProto()).build();
-        } else {
-            // Game hasn't started, send an empty state.
-            GameState emptyState = new GameState();
-            update = ServerToClient.newBuilder().setGameState(emptyState.toProto()).build();
-        }
+        // Watchers get the full, unobfuscated game state.
+        update = ServerToClient.newBuilder().setGameState(gameController.getFullGameState().toProto()).build();
         observer.onNext(update);
     }
 
     private void broadcastGameState() {
-        if (gameController == null) return;
-
         // Send personalized game state to each player
         for (Role playerRole : playerObservers.keySet()) {
             sendGameStateToPlayer(playerRole);

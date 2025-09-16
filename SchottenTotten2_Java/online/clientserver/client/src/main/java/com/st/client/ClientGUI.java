@@ -17,6 +17,7 @@ import com.st.common.Constants;
 import com.st.common.GameState;
 import com.st.common.Role;
 import com.st.common.Wall;
+import com.st.common.Winner;
 import com.st.proto.GameService.ClientToServer;
 import com.st.proto.GameService.ServerToClient;
 import com.st.proto.Participant;
@@ -31,6 +32,7 @@ public class ClientGUI {
     private static GameState gameState;
     private static GameView gameView;
     private static StreamObserver<ClientToServer> toServerStream;
+    private static Role clientRole;
 
     public static void main(String[] args) {
         mainFrame = new JFrame("Schotten Totten 2 (client)");
@@ -49,7 +51,7 @@ public class ClientGUI {
                 hostIP = "localhost";
             }
             try {
-                channel = ManagedChannelBuilder.forTarget("dns:///"+hostIP+":12345")
+                channel = ManagedChannelBuilder.forTarget("dns:///" + hostIP + ":12345")
                         .usePlaintext()
                         .build();
                 break;
@@ -79,6 +81,7 @@ public class ClientGUI {
         mainFrame.revalidate();
         mainFrame.repaint();
     }
+
     private static void connectToServer(ManagedChannel channel) {
         SchottenTotten2ServiceGrpc.SchottenTotten2ServiceStub asyncStub = SchottenTotten2ServiceGrpc.newStub(channel);
         toServerStream = asyncStub.gameStream(new StreamObserver<>() {
@@ -90,12 +93,14 @@ public class ClientGUI {
             @Override
             public void onError(Throwable t) {
                 t.printStackTrace();
-                JOptionPane.showMessageDialog(mainFrame, "Connection to server lost: " + t.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(mainFrame, "Connection to server lost: " + t.getMessage(),
+                        "Connection Error", JOptionPane.ERROR_MESSAGE);
             }
 
             @Override
             public void onCompleted() {
-                JOptionPane.showMessageDialog(mainFrame, "Server has closed the connection.", "Connection Closed", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(mainFrame, "Server has closed the connection.", "Connection Closed",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
@@ -110,15 +115,23 @@ public class ClientGUI {
         switch (message.getMessageCase()) {
             case GAME_STATE:
                 gameState = GameState.fromProto(message.getGameState());
+                // System.out.println("Game state from server: " + gameState);
                 updateUI();
+                if (gameState.getWinner() != Winner.NONE) {
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mainFrame,
+                            gameState.getWinner() == Winner.ATTACKER ? "Attacker wins!"
+                                    : "Defender wins!",
+                            "Game Over", JOptionPane.INFORMATION_MESSAGE));
+                }
                 break;
             case DECLARATION_RESPONSE:
                 Participant.ClientDeclarationResponseProto response = message.getDeclarationResponse();
                 if (response.getStatus() == Participant.ClientDeclarationResponseProto.Status.SUCCESS) {
-                    Role role = response.getAssignedRole() == Participant.RoleProto.ATTACKER_ROLE ? Role.ATTACKER : Role.DEFENDER;
-                    mainFrame.setTitle("Schotten Totten 2 (Client - " + role + ")");
+                    clientRole = Role.fromProto(response.getAssignedRole());
+                    mainFrame.setTitle("Schotten Totten 2 (Client - " + clientRole + ")");
                 } else if (response.getStatus() == Participant.ClientDeclarationResponseProto.Status.GAME_FULL) {
-                    JOptionPane.showMessageDialog(mainFrame, "Game is full. Cannot join.", "Game Full", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(mainFrame, "Game is full. Cannot join.", "Game Full",
+                            JOptionPane.WARNING_MESSAGE);
                 }
                 break;
         }
@@ -139,7 +152,8 @@ public class ClientGUI {
         Card card = gameView.getSelectedCard();
         if (card != null) {
             if (gameState.isClientTurn()) {
-                ClientMove move = new ClientMove(card, wall.getWallIndex());
+                // The ClientMove common object doesn't need the role, but the proto does.
+                ClientMove move = new ClientMove(card, wall.getWallIndex(), clientRole);
                 gameView.unselectCard();
                 ClientToServer request = ClientToServer.newBuilder().setMove(move.toProto()).build();
                 toServerStream.onNext(request);

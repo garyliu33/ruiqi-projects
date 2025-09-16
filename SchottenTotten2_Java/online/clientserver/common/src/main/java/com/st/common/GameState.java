@@ -36,6 +36,9 @@ public class GameState {
         this.deck = new Deck();
         this.deck.shuffle();
         this.discard = new TreeMap<>();
+        for (CardColor color : CardColor.getAllColors()) {
+            this.discard.put(color, new ArrayList<>());
+        }
         this.isClientTurn = false; // Not relevant for server-side full state
         this.cauldronCount = Constants.NUM_CAULDRONS;
         this.usedCauldron = false;
@@ -104,6 +107,25 @@ public class GameState {
         return lastPlayedCard;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("GameState{\n");
+        sb.append("  isClientTurn=").append(isClientTurn).append(",\n");
+        sb.append("  isClientAttacker=").append(isClientAttacker).append(",\n");
+        sb.append("  winner=").append(winner).append(",\n");
+        sb.append("  lastPlayedCard=").append(lastPlayedCard).append(",\n");
+        sb.append("  attackerHand=").append(attackerHand).append(",\n");
+        sb.append("  defenderHand=").append(defenderHand).append(",\n");
+        sb.append("  deckSize=").append(deck.size()).append(",\n");
+        sb.append("  cauldronCount=").append(cauldronCount).append(",\n");
+        sb.append("  usedCauldron=").append(usedCauldron).append(",\n");
+        sb.append("  walls=").append(java.util.Arrays.toString(walls)).append(",\n");
+        sb.append("  discard=").append(discard).append("\n");
+        sb.append('}');
+        return sb.toString();
+    }
+
     public GameStateProto toProto() {
         GameStateProto.Builder builder = GameStateProto.newBuilder();
         for (Card c : attackerHand) {
@@ -154,6 +176,9 @@ public class GameState {
         }
 
         Map<CardColor, List<Card>> discard = new TreeMap<>();
+        for (CardColor color : CardColor.getAllColors()) {
+            discard.put(color, new ArrayList<>());
+        }
         Map<Integer, CardListProto> protoMap = proto.getDiscardMap();
         for (Integer key : protoMap.keySet()) {
             List<Card> cards = new ArrayList<>();

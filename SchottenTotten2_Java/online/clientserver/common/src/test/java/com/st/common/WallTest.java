@@ -79,8 +79,8 @@ public class WallTest {
 
     @Test
     public void testContains() {
-        wall.playCard(red5, true);
-        wall.playCard(blue6, false);
+        wall.playCard(red5, true, true);
+        wall.playCard(blue6, false, true);
         assertTrue(wall.contains(red5));
         assertTrue(wall.contains(blue6));
         assertFalse(wall.contains(red6));
@@ -88,8 +88,8 @@ public class WallTest {
 
     @Test
     public void testReset() {
-        wall.playCard(red5, true);
-        wall.playCard(blue6, false);
+        wall.playCard(red5, true, true);
+        wall.playCard(blue6, false, true);
         assertEquals(1, wall.getAttackerCards().size());
         assertEquals(1, wall.getDefenderCards().size());
 
@@ -107,7 +107,7 @@ public class WallTest {
 
     @Test
     public void testPlayRegularCardSuccess() {
-        PlayResult result = wall.playCard(red5, true);
+        PlayResult result = wall.playCard(red5, true, true);
         assertEquals(PlayResult.Type.SUCCESS, result.getResultType());
         assertEquals(1, wall.getAttackerCards().size());
         assertEquals(0, result.getToDiscard().size());
@@ -115,21 +115,21 @@ public class WallTest {
     
     @Test
     public void testPlayCardWhenWallIsFull() {
-        wall.playCard(red5, true);
-        wall.playCard(red6, true);
-        wall.playCard(blue5, true);
+        wall.playCard(red5, true, true);
+        wall.playCard(red6, true, true);
+        wall.playCard(blue5, true, true);
 
-        PlayResult result = wall.playCard(blue6, true);
+        PlayResult result = wall.playCard(blue6, true, true);
         assertEquals(PlayResult.Type.FAILURE, result.getResultType());
         assertEquals(3, wall.getAttackerCards().size());
     }
 
     @Test
     public void testPlayRetreatCard() {
-        wall.playCard(red5, true);
-        wall.playCard(red6, true);
+        wall.playCard(red5, true, true);
+        wall.playCard(red6, true, true);
 
-        PlayResult result = wall.playCard(Card.RETREAT, true);
+        PlayResult result = wall.playCard(Card.RETREAT, true, true);
         assertEquals(PlayResult.Type.ACTION, result.getResultType());
         assertEquals(2, result.getToDiscard().size());
         assertTrue(result.getToDiscard().contains(red5));
@@ -139,9 +139,9 @@ public class WallTest {
     
     @Test
     public void testPlayCauldronCardWhenAttackerHasCards() {
-        wall.playCard(red5, true);
+        wall.playCard(red5, true, true);
         
-        PlayResult result = wall.playCard(Card.CAULDRON, true);
+        PlayResult result = wall.playCard(Card.CAULDRON, true, true);
         assertEquals(PlayResult.Type.ACTION, result.getResultType());
         assertEquals(1, result.getToDiscard().size());
         assertTrue(result.getToDiscard().contains(red5));
@@ -150,15 +150,15 @@ public class WallTest {
 
     @Test
     public void testPlayCauldronCardWhenAttackerHasNoCards() {
-        PlayResult result = wall.playCard(Card.CAULDRON, true);
+        PlayResult result = wall.playCard(Card.CAULDRON, true, true);
         assertEquals(PlayResult.Type.FAILURE, result.getResultType());
         assertTrue(wall.getAttackerCards().isEmpty());
     }
     
     @Test
     public void testPlaySpecialValueCardWithCounterpart() {
-        wall.playCard(green11, false); // Defender plays a 11
-        PlayResult result = wall.playCard(green0, true); // Attacker plays a 0
+        wall.playCard(green11, false, true); // Defender plays a 11
+        PlayResult result = wall.playCard(green0, true, true); // Attacker plays a 0
         
         assertEquals(PlayResult.Type.SUCCESS, result.getResultType());
         assertEquals(2, result.getToDiscard().size());
@@ -174,9 +174,9 @@ public class WallTest {
     public void testDeclareControlAttackerWin() {
         // Attacker wins with a higher strength
         Wall highStrengthWall = new Wall(2); // Wall 2 has length 3
-        highStrengthWall.playCard(new Card(CardColor.RED, 5), true);
-        highStrengthWall.playCard(new Card(CardColor.RED, 6), true);
-        highStrengthWall.playCard(new Card(CardColor.RED, 7), true); // Attacker formation is now complete
+        highStrengthWall.playCard(new Card(CardColor.RED, 5), true, true);
+        highStrengthWall.playCard(new Card(CardColor.RED, 6), true, true);
+        highStrengthWall.playCard(new Card(CardColor.RED, 7), true, true); // Attacker formation is now complete
 
         List<Card> defenderCards = new ArrayList<>();
         defenderCards.add(new Card(CardColor.BLUE, 1));
@@ -192,10 +192,10 @@ public class WallTest {
     public void testDeclareControlAttackerFinishedFirstWin() {
         // Attacker wins with equal strength but finished first
         Wall equalStrengthWall = new Wall(3); // Wall 3 has length 2
-        equalStrengthWall.playCard(new Card(CardColor.RED, 5), true);
-        equalStrengthWall.playCard(new Card(CardColor.RED, 6), true);
+        equalStrengthWall.playCard(new Card(CardColor.RED, 5), true, true);
+        equalStrengthWall.playCard(new Card(CardColor.RED, 6), true, true);
         // Play one card for defender to trigger attackerFinishedFirst
-        equalStrengthWall.playCard(new Card(CardColor.BLUE, 5), false); 
+        equalStrengthWall.playCard(new Card(CardColor.BLUE, 5), false, true); 
 
         List<Card> list = new ArrayList<>();
         list.add(new Card(CardColor.BLUE, 4));
@@ -209,8 +209,8 @@ public class WallTest {
     public void testDeclareControlDefenderWin() {
         // Defender wins with higher strength
         Wall defenderWinWall = new Wall(3); // Wall 3 has length 2
-        defenderWinWall.playCard(new Card(CardColor.RED, 1), true);
-        defenderWinWall.playCard(new Card(CardColor.RED, 2), true);
+        defenderWinWall.playCard(new Card(CardColor.RED, 1), true, true);
+        defenderWinWall.playCard(new Card(CardColor.RED, 2), true, true);
         
         List<Card> defenderCards = new ArrayList<>();
         defenderCards.add(new Card(CardColor.BLUE, 10));
@@ -225,8 +225,8 @@ public class WallTest {
     
     @Test
     public void testDamageFromIntactToDamaged() {
-        wall.playCard(red5, true);
-        wall.playCard(blue6, false);
+        wall.playCard(red5, true, true);
+        wall.playCard(blue6, false, true);
         Set<Card> discarded = wall.damage();
         
         assertEquals(Status.DAMAGED, wall.getStatus());
@@ -239,8 +239,8 @@ public class WallTest {
     public void testDamageFromDamagedToBroken() {
         // Set the wall to a damaged state first
         Wall damagedWall = new Wall(0, Status.DAMAGED);
-        damagedWall.playCard(red5, true);
-        damagedWall.playCard(blue6, false);
+        damagedWall.playCard(red5, true, true);
+        damagedWall.playCard(blue6, false, true);
         
         Set<Card> discarded = damagedWall.damage();
         
@@ -254,8 +254,8 @@ public class WallTest {
 
     @Test
     public void testToProtoAndFromProtoRoundTrip() {
-        wall.playCard(red5, true);
-        wall.playCard(blue6, false);
+        wall.playCard(red5, true, true);
+        wall.playCard(blue6, false, true);
         wall.damage(); // Set it to a damaged state
 
         WallProto proto = wall.toProto();

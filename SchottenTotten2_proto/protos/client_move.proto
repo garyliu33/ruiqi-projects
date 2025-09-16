@@ -2,9 +2,11 @@ syntax = "proto3";
 
 package com.st.proto;
 
+import "participant.proto";
 import "card.proto";
 
 message ClientMoveProto {
     CardProto card = 1;
     int32 wall_index = 2;
+    RoleProto role = 3;
 }
