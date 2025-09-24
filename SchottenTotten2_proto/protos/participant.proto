@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package com.st.proto;
+
+option java_package = "com.st.proto";
+option java_outer_classname = "Participant";
+
+enum ClientTypeProto {
+  PLAYER = 0;
+  WATCHER = 1;
+}
+
+enum RoleProto {
+  ROLE_UNSPECIFIED = 0;  
+  ATTACKER_ROLE = 1;
+  DEFENDER_ROLE = 2;
+}
+
+message ClientDeclarationProto {
+  ClientTypeProto client_type = 1;
+  optional RoleProto role = 2; 
+}
+
+message ClientDeclarationResponseProto {
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    SUCCESS = 1;
+    GAME_FULL = 2;
+  }
+
+  Status status = 1;
+  optional RoleProto assigned_role = 2;
+}

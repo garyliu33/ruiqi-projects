@@ -3,7 +3,7 @@ use rand::seq::IndexedRandom;
 use rayon::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fmt::{Debug, Display};
+use std::fmt::Display;
 use std::rc::Rc;
 
 use crate::game_state::GameState;
