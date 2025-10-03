@@ -84,7 +84,7 @@ fn main() {
         if !schotten_totten_2_state.is_client_turn {
             continue;
         }
-        let m = parallel_multi_observer_ismcts(&schotten_totten_2_state, 100000, num_cpus::get());
+        let m = parallel_multi_observer_ismcts(&schotten_totten_2_state, 10000, num_cpus::get());
         let move_proto = m.to_proto();
         write_delimited(&mut stream, &move_proto).unwrap();
     }

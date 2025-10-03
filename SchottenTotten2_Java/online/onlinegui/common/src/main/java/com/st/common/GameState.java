@@ -85,11 +85,14 @@ public class GameState {
 
     public GameStateProto toProto() {
         GameStateProto.Builder builder = GameStateProto.newBuilder();
-        for (Card c : hostHand) {
-            builder.addHostHand(c.toProto());
+        Set<Card> attackerHand = isClientAttacker? clientHand : hostHand;
+        Set<Card> defenderHand = isClientAttacker? hostHand : clientHand;
+
+        for (Card c : attackerHand) {
+            builder.addAttackerHand(c.toProto());
         }
-        for (Card c : clientHand) {
-            builder.addClientHand(c.toProto());
+        for (Card c : defenderHand) {
+            builder.addDefenderHand(c.toProto());
         }
         for (Wall w : walls) {
             builder.addWalls(w.toProto());
@@ -115,14 +118,14 @@ public class GameState {
     }
 
     public static GameState fromProto(GameStateProto proto) {
-        Set<Card> hostHand = new TreeSet<>();
-        for (int i = 0; i < proto.getHostHandCount(); i++) {
-            hostHand.add(Card.fromProto(proto.getHostHand(i)));
+        Set<Card> attackerHand = new TreeSet<>();
+        for (int i = 0; i < proto.getAttackerHandCount(); i++) {
+            attackerHand.add(Card.fromProto(proto.getAttackerHand(i)));
         }
 
-        Set<Card> clientHand = new TreeSet<>();
-        for (int i = 0; i < proto.getClientHandCount(); i++) {
-            clientHand.add(Card.fromProto(proto.getClientHand(i)));
+        Set<Card> defenderHand = new TreeSet<>();
+        for (int i = 0; i < proto.getDefenderHandCount(); i++) {
+            defenderHand.add(Card.fromProto(proto.getDefenderHand(i)));
         }
 
         Wall[] walls = new Wall[proto.getWallsCount()];
@@ -140,6 +143,9 @@ public class GameState {
             }
             discard.put(CardColor.values()[key], cards);
         }
+
+        Set<Card> hostHand = proto.getIsClientAttacker()? defenderHand : attackerHand;
+        Set<Card> clientHand = proto.getIsClientAttacker()? attackerHand : defenderHand;
 
         return new GameState(hostHand, clientHand, walls, proto.getDeckSize(), discard,
                 proto.getIsClientTurn(), proto.getCauldronCount(), proto.getUsedCauldron(),

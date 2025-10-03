@@ -31,37 +31,19 @@ impl SchottenTotten2State {
                 discard.push(Card::from_proto(card_proto));
             }
         }
-        let client_hand = Card::from_proto_array(&proto.client_hand);
-        let (attacker, defender) = if proto.is_client_attacker.unwrap() {
-            (
-                Player {
-                    hand: client_hand,
+        let attacker = Player {
+                    hand: if proto.is_client_attacker { Card::from_proto_array(&proto.attacker_hand)} else {vec![]},
                     role: Role::Attacker,
                     oil_cauldrons: 0,
-                },
-                Player {
-                    hand: vec![],
+        };
+        let defender = Player {
+                    hand: if proto.is_client_attacker {vec![]} else { Card::from_proto_array(&proto.defender_hand)},
                     role: Role::Defender,
                     oil_cauldrons: proto.cauldron_count as u8,
-                },
-            )
-        } else {
-            (
-                Player {
-                    hand: vec![],
-                    role: Role::Attacker,
-                    oil_cauldrons: 0,
-                },
-                Player {
-                    hand: client_hand,
-                    role: Role::Defender,
-                    oil_cauldrons: proto.cauldron_count as u8,
-                },
-            )
         };
         let player_to_move = match (
-            proto.is_client_turn.unwrap(),
-            proto.is_client_attacker.unwrap(),
+            proto.is_client_turn,
+            proto.is_client_attacker,
         ) {
             (true, true) => 0,
             (true, false) => 1,
@@ -77,7 +59,7 @@ impl SchottenTotten2State {
             wall_tiles: wall_tiles,
             player_to_move_index: player_to_move,
             attacker_damaged_tiles: damaged_tile_count,
-            is_client_turn: proto.is_client_turn.unwrap(),
+            is_client_turn: proto.is_client_turn,
             last_played_card: proto
                 .last_played_card
                 .map(|card_proto| Card::from_proto(&card_proto)),

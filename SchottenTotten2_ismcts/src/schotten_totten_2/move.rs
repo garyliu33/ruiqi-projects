@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::schotten_totten_2::card::Card;
-use crate::schotten_totten_2::com_st_proto;
+use crate::schotten_totten_2::com_st_proto::{self, RoleProto};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SchottenTotten2Move {
@@ -31,6 +31,7 @@ impl SchottenTotten2Move {
         };
         com_st_proto::ClientMoveProto {
             card: Some(card_proto),
+            role: RoleProto::RoleUnspecified as i32,
             wall_index: *tile_index as i32,
         }
     }
